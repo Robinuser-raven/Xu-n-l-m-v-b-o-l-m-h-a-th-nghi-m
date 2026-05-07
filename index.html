@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>🧪 Phòng thí nghiệm hóa học - Kéo thả & Mô phỏng</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: linear-gradient(145deg, #1a1e2b 0%, #2a2f3f 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+    .lab-container {
+      max-width: 1000px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 48px;
+      padding: 24px;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .lab-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: #e0e7ff;
+      padding-left: 10px;
+    }
+    .lab-header h1 {
+      font-weight: 500;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      background: linear-gradient(to right, #c7d2fe, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .main-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    /* Khu vực thí nghiệm bên trái */
+    .experiment-area {
+      flex: 1 1 350px;
+      background: #212433;
+      border-radius: 40px;
+      padding: 25px 15px 20px;
+      box-shadow: inset 0 -8px 0 #0f1119, 0 20px 30px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 2px solid #4b5268;
+    }
+    .beaker-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      display: block;
+      width: 220px;
+      height: 220px;
+      filter: drop-shadow(0 20px 15px rgba(0, 0, 0, 0.6));
+      transition: transform 0.2s ease;
+    }
+    .liquid-label {
+      color: #cdd6f4;
+      font-weight: 600;
+      margin-top: 12px;
+      background: #2e3347;
+      padding: 6px 20px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ph-indicator {
+      background: #0b0e17;
+      border-radius: 20px;
+      padding: 4px 16px;
+      color: #f5e56c;
+      font-weight: bold;
+    }
+    .drop-zone-highlight {
+      outline: 3px dashed #a5b4fc;
+      outline-offset: 8px;
+      border-radius: 50px;
+      transition: outline 0.2s;
+    }
+    /* Khu vực mô tả bên phải */
+    .info-panel {
+      flex: 1 1 280px;
+      background: rgba(20, 22, 33, 0.8);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .description-box {
+      background: #151824;
+      border-radius: 24px;
+      padding: 18px;
+      color: #dbeafe;
+      min-height: 150px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .description-box h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: #cbd5ff;
+    }
+    .chemical-detail {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #cdd6f4;
+    }
+    .reaction-note {
+      margin-top: 12px;
+      background: #262b40;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-style: italic;
+      color: #f0e68c;
+    }
+    /* Kệ hóa chất kéo thả */
+    .shelf {
+      background: #2f3445;
+      border-radius: 100px;
+      padding: 18px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      box-shadow: inset 0 3px 8px rgba(0,0,0,0.7), 0 10px 10px rgba(0,0,0,0.4);
+      margin: 15px 0 10px;
+    }
+    .chem-bottle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: grab;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.05);
+      padding: 10px 16px;
+      border-radius: 40px;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .chem-bottle:active {
+      cursor: grabbing;
+      opacity: 0.8;
+    }
+    .chem-bottle.dragging {
+      opacity: 0.5;
+      transform: scale(0.95);
+      border: 2px dashed #facc15;
+    }
+    .chem-bottle:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateY(-3px);
+    }
+    .bottle-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 8px 6px black);
+      pointer-events: none;
+    }
+    .chem-name {
+      color: #d1d8f0;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: #1e212e;
+      padding: 2px 14px;
+      border-radius: 20px;
+      pointer-events: none;
+    }
+    .action-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .reset-btn {
+      background: #433c50;
+      border: none;
+      color: #f1f0fa;
+      font-weight: bold;
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 0.5px;
+      box-shadow: 0 6px 0 #1e1b28;
+      border: 1px solid #6b5e7e;
+    }
+    .reset-btn:hover {
+      background: #544b66;
+      box-shadow: 0 4px 0 #1e1b28;
+      transform: translateY(2px);
+    }
+    .message-box {
+      color: #e2e8ff;
+      font-weight: 500;
+      background: #1b1f2c;
+      padding: 8px 22px;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    @media (max-width: 700px) {
+      .main-layout {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="lab-container">
+  <div class="lab-header">
+    <span style="font-size:2.2rem;">🧪</span>
+    <h1>Thí nghiệm hóa học ảo</h1>
+  </div>
+
+  <div class="main-layout">
+    <!-- Cốc thí nghiệm -->
+    <div class="experiment-area" id="beakerDropZone">
+      <div class="beaker-wrapper">
+        <canvas id="beakerCanvas" width="240" height="240"></canvas>
+        <div class="liquid-label">
+          <span id="solutionName">Nước tinh khiết</span>
+          <span class="ph-indicator" id="phDisplay">pH 7.0</span>
+        </div>
+      </div>
+      <div style="color:#9ca3af; font-size:0.8rem; margin-top:8px;">
+        🖱️ Kéo lọ hóa chất thả vào cốc
+      </div>
+    </div>
+
+    <!-- Bảng mô tả -->
+    <div class="info-panel">
+      <div class="description-box" id="descriptionBox">
+        <h3>
+          <span>📋</span> Mô tả hóa chất
+        </h3>
+        <div class="chemical-detail" id="chemicalDetailText">
+          Chọn hoặc kéo một lọ hóa chất để xem chi tiết.
+        </div>
+        <div class="reaction-note" id="reactionNote">
+          💡 Thả vào cốc để quan sát phản ứng.
+        </div>
+      </div>
+      <div class="message-box" id="statusMessage">
+        <span>💧</span> Sẵn sàng thí nghiệm
+      </div>
+    </div>
+  </div>
+
+  <!-- Kệ hóa chất -->
+  <div class="shelf" id="chemicalShelf">
+    <div class="chem-bottle" draggable="true" data-chemical="HCl" id="bottleHCl">
+      <span class="bottle-icon">🧴</span>
+      <span class="chem-name">HCl</span>
+    </div>
+    <div class="chem-bottle" draggable="true" data-chemical="NaOH" id="bottleNaOH">
+      <span class="bottle-icon">🧴</span>
+      <span class="chem-name">NaOH</span>
+    </div>
+    <div class="chem-bottle" draggable="true" data-chemical="phenolphthalein" id="bottlePhenol">
+      <span class="bottle-icon">⚗️</span>
+      <span class="chem-name">Phenolphtalein</span>
+    </div>
+    <div class="chem-bottle" draggable="true" data-chemical="universalIndicator" id="bottleUniversal">
+      <span class="bottle-icon">🌈</span>
+      <span class="chem-name">Chỉ thị vạn năng</span>
+    </div>
+  </div>
+
+  <div class="action-panel">
+    <button class="reset-btn" id="resetButton">
+      <span>🔄</span> Làm mới thí nghiệm
+    </button>
+    <div style="color:#b9c2d9; font-size:0.85rem;">
+      Kéo thả hoặc nhấn trực tiếp
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --- TRẠNG THÁI HÓA HỌC ---
+    let acidConcentration = 0.0;
+    let baseConcentration = 0.0;
+    let phenolphthaleinAdded = false;
+    let universalIndicatorAdded = false;
+    const VOLUME = 1.0;
+    const MAX_CONCENTRATION = 0.5;
+
+    // DOM elements
+    const canvas = document.getElementById('beakerCanvas');
+    const ctx = canvas.getContext('2d');
+    const solutionNameSpan = document.getElementById('solutionName');
+    const phDisplaySpan = document.getElementById('phDisplay');
+    const statusMessage = document.getElementById('statusMessage');
+    const chemicalDetailText = document.getElementById('chemicalDetailText');
+    const reactionNote = document.getElementById('reactionNote');
+    const beakerDropZone = document.getElementById('beakerDropZone');
+    const bottles = document.querySelectorAll('.chem-bottle');
+
+    // --- MÔ TẢ CHI TIẾT CHO TỪNG HÓA CHẤT ---
+    const chemicalDescriptions = {
+      HCl: {
+        name: 'Axit Clohidric (HCl)',
+        detail: 'Axit mạnh, phân li hoàn toàn trong nước tạo ion H⁺. Làm giảm pH mạnh.',
+        reaction: 'Trung hòa với bazơ, giải phóng nhiệt.'
+      },
+      NaOH: {
+        name: 'Natri Hidroxit (NaOH)',
+        detail: 'Bazơ mạnh, phân li hoàn toàn tạo ion OH⁻. Làm tăng pH mạnh.',
+        reaction: 'Phản ứng mãnh liệt với axit tạo muối và nước.'
+      },
+      phenolphthalein: {
+        name: 'Phenolphtalein (chỉ thị)',
+        detail: 'Chỉ thị pH: không màu khi pH < 8.2, chuyển hồng tím khi pH ≥ 8.2.',
+        reaction: 'Dùng để nhận biết môi trường bazơ.'
+      },
+      universalIndicator: {
+        name: 'Chỉ thị vạn năng',
+        detail: 'Hỗn hợp chỉ thị cho dải màu từ đỏ (axit mạnh) đến tím (bazơ mạnh).',
+        reaction: 'Hiển thị màu theo pH: đỏ, cam, vàng, lục, xanh, tím.'
+      }
+    };
+
+    // --- TÍNH pH ---
+    function calculatePH() {
+      const deltaH = acidConcentration - baseConcentration;
+      if (Math.abs(deltaH) < 1e-9) return 7.0;
+      if (deltaH > 0) {
+        let hPlus = Math.min(deltaH, 1.0);
+        let pH = -Math.log10(hPlus);
+        return Math.round(Math.max(0, pH) * 10) / 10;
+      } else {
+        let ohMinus = Math.min(-deltaH, 1.0);
+        let pOH = -Math.log10(ohMinus);
+        let pH = 14.0 - pOH;
+        return Math.round(Math.min(14, pH) * 10) / 10;
+      }
+    }
+
+    // --- MÀU DUNG DỊCH ---
+    function getSolutionColor(pH) {
+      if (universalIndicatorAdded) {
+        if (pH < 3) return { r: 220, g: 50, b: 50, alpha: 0.9 };
+        if (pH < 5) return { r: 240, g: 130, b: 40, alpha: 0.9 };
+        if (pH < 6) return { r: 240, g: 200, b: 50, alpha: 0.9 };
+        if (pH <= 7.5) return { r: 120, g: 190, b: 100, alpha: 0.85 };
+        if (pH < 9) return { r: 60, g: 140, b: 190, alpha: 0.9 };
+        if (pH < 11) return { r: 100, g: 80, b: 180, alpha: 0.9 };
+        return { r: 140, g: 70, b: 180, alpha: 0.9 };
+      }
+      if (phenolphthaleinAdded) {
+        return pH >= 8.2 ? { r: 230, g: 80, b: 130, alpha: 0.85 } : { r: 210, g: 225, b: 240, alpha: 0.65 };
+      }
+      if (pH < 3) return { r: 230, g: 240, b: 245, alpha: 0.7 };
+      if (pH > 11) return { r: 190, g: 210, b: 240, alpha: 0.75 };
+      return { r: 200, g: 220, b: 240, alpha: 0.7 };
+    }
+
+    // --- CẬP NHẬT GIAO DIỆN ---
+    function updateDisplay() {
+      const pH = calculatePH();
+      phDisplaySpan.textContent = `pH ${pH.toFixed(1)}`;
+      let name = 'Nước tinh khiết';
+      if (acidConcentration > baseConcentration) name = 'Dung dịch axit';
+      else if (baseConcentration > acidConcentration) name = 'Dung dịch bazơ';
+      const indicators = [];
+      if (phenolphthaleinAdded) indicators.push('Phenolphtalein');
+      if (universalIndicatorAdded) indicators.push('C.t vạn năng');
+      if (indicators.length) name += ' + ' + indicators.join(', ');
+      solutionNameSpan.textContent = name;
+      drawBeaker(pH);
+    }
+
+    function drawBeaker(pH) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width, h = canvas.height;
+      const left = 55, right = w-55, top = 40, bottom = h-25;
+      const liquidY = bottom - 30;
+      ctx.save();
+      ctx.strokeStyle = '#bcd0f0';
+      ctx.lineWidth = 3.5;
+      ctx.fillStyle = 'rgba(230,242,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left+14, bottom);
+      ctx.lineTo(right-14, bottom);
+      ctx.lineTo(right, top);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      const color = getSolutionColor(pH);
+      ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${color.alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(left+15, top+16);
+      ctx.lineTo(left+22, liquidY);
+      ctx.lineTo(right-22, liquidY);
+      ctx.lineTo(right-15, top+16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath();
+      ctx.ellipse((left+right)/2, top+16, 50, 5, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // --- THÊM HÓA CHẤT ---
+    function addChemical(chemical) {
+      const ADD = 0.08;
+      switch(chemical) {
+        case 'HCl':
+          acidConcentration = Math.min(acidConcentration + ADD, MAX_CONCENTRATION);
+          statusMessage.innerHTML = '<span>🧪</span> Đã thêm HCl vào cốc';
+          break;
+        case 'NaOH':
+          baseConcentration = Math.min(baseConcentration + ADD, MAX_CONCENTRATION);
+          statusMessage.innerHTML = '<span>🧪</span> Đã thêm NaOH vào cốc';
+          break;
+        case 'phenolphthalein':
+          if(!phenolphthaleinAdded) {
+            phenolphthaleinAdded = true;
+            statusMessage.innerHTML = '<span>🌸</span> Đã thêm Phenolphthalein';
+          } else statusMessage.innerHTML = '<span>ℹ️</span> Phenolphthalein đã có';
+          break;
+        case 'universalIndicator':
+          if(!universalIndicatorAdded) {
+            universalIndicatorAdded = true;
+            statusMessage.innerHTML = '<span>🌈</span> Đã thêm chỉ thị vạn năng';
+          } else statusMessage.innerHTML = '<span>ℹ️</span> Chỉ thị đã có';
+          break;
+      }
+      updateDisplay();
+    }
+
+    function resetExperiment() {
+      acidConcentration = 0; baseConcentration = 0;
+      phenolphthaleinAdded = false; universalIndicatorAdded = false;
+      statusMessage.innerHTML = '<span>💧</span> Đã làm mới thí nghiệm';
+      chemicalDetailText.textContent = 'Chọn hoặc kéo một lọ hóa chất để xem chi tiết.';
+      reactionNote.innerHTML = '💡 Thả vào cốc để quan sát phản ứng.';
+      updateDisplay();
+    }
+
+    // --- HIỂN THỊ MÔ TẢ KHI CHỌN ---
+    function showChemicalDescription(chemical) {
+      const desc = chemicalDescriptions[chemical];
+      if (desc) {
+        chemicalDetailText.textContent = desc.detail;
+        reactionNote.innerHTML = `🧪 ${desc.reaction}`;
+      }
+    }
+
+    // --- KÉO THẢ (DRAG & DROP) ---
+    function setupDragAndDrop() {
+      bottles.forEach(bottle => {
+        bottle.addEventListener('dragstart', handleDragStart);
+        bottle.addEventListener('dragend', handleDragEnd);
+        // Vẫn giữ click để thêm nhanh
+        bottle.addEventListener('click', (e) => {
+          const chem = bottle.getAttribute('data-chemical');
+          addChemical(chem);
+          showChemicalDescription(chem);
+        });
+      });
+
+      beakerDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        beakerDropZone.classList.add('drop-zone-highlight');
+      });
+      beakerDropZone.addEventListener('dragleave', () => {
+        beakerDropZone.classList.remove('drop-zone-highlight');
+      });
+      beakerDropZone.addEventListener('drop', handleDrop);
+    }
+
+    function handleDragStart(e) {
+      const bottle = e.target.closest('.chem-bottle');
+      if (!bottle) return;
+      bottle.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', bottle.getAttribute('data-chemical'));
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+      const bottle = e.target.closest('.chem-bottle');
+      if (bottle) bottle.classList.remove('dragging');
+      beakerDropZone.classList.remove('drop-zone-highlight');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      beakerDropZone.classList.remove('drop-zone-highlight');
+      const chemical = e.dataTransfer.getData('text/plain');
+      if (chemical && chemicalDescriptions[chemical]) {
+        addChemical(chemical);
+        showChemicalDescription(chemical);
+      }
+    }
+
+    // Khởi tạo
+    window.addEventListener('load', () => {
+      setupDragAndDrop();
+      updateDisplay();
+      document.getElementById('resetButton').addEventListener('click', resetExperiment);
+    });
+  })();
+</script>
+</body>
+</html>
