@@ -1,552 +1,1031 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
-  <title>🧪 Phòng thí nghiệm hóa học - Kéo thả & Mô phỏng</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: linear-gradient(145deg, #1a1e2b 0%, #2a2f3f 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
-      padding: 20px;
-      margin: 0;
-    }
-    .lab-container {
-      max-width: 1000px;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-radius: 48px;
-      padding: 24px;
-      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-    .lab-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      color: #e0e7ff;
-      padding-left: 10px;
-    }
-    .lab-header h1 {
-      font-weight: 500;
-      font-size: 2rem;
-      letter-spacing: 2px;
-      background: linear-gradient(to right, #c7d2fe, #a5b4fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .main-layout {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    /* Khu vực thí nghiệm bên trái */
-    .experiment-area {
-      flex: 1 1 350px;
-      background: #212433;
-      border-radius: 40px;
-      padding: 25px 15px 20px;
-      box-shadow: inset 0 -8px 0 #0f1119, 0 20px 30px rgba(0,0,0,0.5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-bottom: 2px solid #4b5268;
-    }
-    .beaker-wrapper {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    canvas {
-      display: block;
-      width: 220px;
-      height: 220px;
-      filter: drop-shadow(0 20px 15px rgba(0, 0, 0, 0.6));
-      transition: transform 0.2s ease;
-    }
-    .liquid-label {
-      color: #cdd6f4;
-      font-weight: 600;
-      margin-top: 12px;
-      background: #2e3347;
-      padding: 6px 20px;
-      border-radius: 40px;
-      font-size: 0.9rem;
-      letter-spacing: 0.5px;
-      box-shadow: inset 0 1px 4px rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .ph-indicator {
-      background: #0b0e17;
-      border-radius: 20px;
-      padding: 4px 16px;
-      color: #f5e56c;
-      font-weight: bold;
-    }
-    .drop-zone-highlight {
-      outline: 3px dashed #a5b4fc;
-      outline-offset: 8px;
-      border-radius: 50px;
-      transition: outline 0.2s;
-    }
-    /* Khu vực mô tả bên phải */
-    .info-panel {
-      flex: 1 1 280px;
-      background: rgba(20, 22, 33, 0.8);
-      backdrop-filter: blur(12px);
-      border-radius: 32px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-    .description-box {
-      background: #151824;
-      border-radius: 24px;
-      padding: 18px;
-      color: #dbeafe;
-      min-height: 150px;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
-    }
-    .description-box h3 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-      color: #cbd5ff;
-    }
-    .chemical-detail {
-      font-size: 0.9rem;
-      line-height: 1.6;
-      color: #cdd6f4;
-    }
-    .reaction-note {
-      margin-top: 12px;
-      background: #262b40;
-      border-radius: 16px;
-      padding: 10px 14px;
-      font-style: italic;
-      color: #f0e68c;
-    }
-    /* Kệ hóa chất kéo thả */
-    .shelf {
-      background: #2f3445;
-      border-radius: 100px;
-      padding: 18px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      box-shadow: inset 0 3px 8px rgba(0,0,0,0.7), 0 10px 10px rgba(0,0,0,0.4);
-      margin: 15px 0 10px;
-    }
-    .chem-bottle {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: grab;
-      transition: all 0.2s ease;
-      background: rgba(255,255,255,0.05);
-      padding: 10px 16px;
-      border-radius: 40px;
-      border: 1px solid transparent;
-      user-select: none;
-    }
-    .chem-bottle:active {
-      cursor: grabbing;
-      opacity: 0.8;
-    }
-    .chem-bottle.dragging {
-      opacity: 0.5;
-      transform: scale(0.95);
-      border: 2px dashed #facc15;
-    }
-    .chem-bottle:hover {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.4);
-      transform: translateY(-3px);
-    }
-    .bottle-icon {
-      font-size: 2.5rem;
-      filter: drop-shadow(0 8px 6px black);
-      pointer-events: none;
-    }
-    .chem-name {
-      color: #d1d8f0;
-      font-weight: 600;
-      font-size: 0.9rem;
-      background: #1e212e;
-      padding: 2px 14px;
-      border-radius: 20px;
-      pointer-events: none;
-    }
-    .action-panel {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .reset-btn {
-      background: #433c50;
-      border: none;
-      color: #f1f0fa;
-      font-weight: bold;
-      padding: 12px 28px;
-      border-radius: 40px;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-      letter-spacing: 0.5px;
-      box-shadow: 0 6px 0 #1e1b28;
-      border: 1px solid #6b5e7e;
-    }
-    .reset-btn:hover {
-      background: #544b66;
-      box-shadow: 0 4px 0 #1e1b28;
-      transform: translateY(2px);
-    }
-    .message-box {
-      color: #e2e8ff;
-      font-weight: 500;
-      background: #1b1f2c;
-      padding: 8px 22px;
-      border-radius: 30px;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    @media (max-width: 700px) {
-      .main-layout {
-        flex-direction: column;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng Phòng Thí Nghiệm Hóa Học 3D</title>
+    <style>
+        body { margin: 0; background-color: #111; overflow: hidden; font-family: sans-serif; }
+        canvas { display: block; }
+        
+        /* Giao diện hướng dẫn & thông tin */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 15px;
+            border-radius: 8px;
+            pointer-events: none;
+            max-width: 350px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        #hud h3 { margin: 0 0 10px 0; color: #4dabf7; }
+        
+        /* Tâm ngắm giữa màn hình */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            border: 1px solid #000;
+        }
+
+        /* Hiển thị trạng thái cầm nắm/hóa chất trong Pipet */
+        #status-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            pointer-events: none;
+            font-size: 16px;
+            text-align: center;
+            border: 2px solid #4dabf7;
+        }
+
+        /* Màn hình khóa chuột */
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            z-index: 99;
+        }
+        #instructions {
+            text-align: center;
+            font-size: 20px;
+        }
+    </style>
 </head>
 <body>
-<div class="lab-container">
-  <div class="lab-header">
-    <span style="font-size:2.2rem;">🧪</span>
-    <h1>Thí nghiệm hóa học ảo</h1>
-  </div>
-
-  <div class="main-layout">
-    <!-- Cốc thí nghiệm -->
-    <div class="experiment-area" id="beakerDropZone">
-      <div class="beaker-wrapper">
-        <canvas id="beakerCanvas" width="240" height="240"></canvas>
-        <div class="liquid-label">
-          <span id="solutionName">Nước tinh khiết</span>
-          <span class="ph-indicator" id="phDisplay">pH 7.0</span>
+    <div id="blocker">
+        <div id="instructions">
+            <h1 style="color: #4dabf7;">PHÒNG THÍ NGHIỆM 3D</h1>
+            <p>Click vào màn hình để bắt đầu trải nghiệm</p>
+            <p style="font-size: 16px; color: #aaa;">
+                Di chuyển: W, A, S, D | Nhảy: SPACE<br>
+                Tương tác (Cầm/Đặt/Mở cửa): E | Mở nắp chai hóa chất: F<br>
+                Hút/Nhỏ hóa chất (khi cầm Pipet): Click Chuột Trái
+            </p>
         </div>
-      </div>
-      <div style="color:#9ca3af; font-size:0.8rem; margin-top:8px;">
-        🖱️ Kéo lọ hóa chất thả vào cốc
-      </div>
     </div>
 
-    <!-- Bảng mô tả -->
-    <div class="info-panel">
-      <div class="description-box" id="descriptionBox">
-        <h3>
-          <span>📋</span> Mô tả hóa chất
-        </h3>
-        <div class="chemical-detail" id="chemicalDetailText">
-          Chọn hoặc kéo một lọ hóa chất để xem chi tiết.
-        </div>
-        <div class="reaction-note" id="reactionNote">
-          💡 Thả vào cốc để quan sát phản ứng.
-        </div>
-      </div>
-      <div class="message-box" id="statusMessage">
-        <span>💧</span> Sẵn sàng thí nghiệm
-      </div>
+    <div id="crosshair"></div>
+    
+    <div id="hud">
+        <h3>HƯỚNG DẪN TƯƠNG TÁC</h3>
+        * <b>Nhìn vào vật thể</b> và nhấn phím tương ứng:<br>
+        * <b>Cửa chính / Cửa tủ:</b> Nhấn [E] để Đóng/Mở.<br>
+        * <b>Chai hóa chất:</b> Nhấn [F] để Mở/Đóng nắp.<br>
+        * <b>Pipet, Cốc, Ống nghiệm:</b> Nhấn [E] để Cầm lên / Đặt xuống bàn.<br>
+        * <b>Hút dung dịch:</b> Cầm Pipet chỉ vào chai đã mở nắp, nhấn Chuột Trái.<br>
+        * <b>Nhỏ dung dịch:</b> Chỉ Pipet vào Ống nghiệm/Cốc, nhấn Chuột Trái.<br>
+        * <b>Đặt ống nghiệm vào giá:</b> Chỉ vào giá đỡ và nhấn Chuột Trái.
     </div>
-  </div>
 
-  <!-- Kệ hóa chất -->
-  <div class="shelf" id="chemicalShelf">
-    <div class="chem-bottle" draggable="true" data-chemical="HCl" id="bottleHCl">
-      <span class="bottle-icon">🧴</span>
-      <span class="chem-name">HCl</span>
-    </div>
-    <div class="chem-bottle" draggable="true" data-chemical="NaOH" id="bottleNaOH">
-      <span class="bottle-icon">🧴</span>
-      <span class="chem-name">NaOH</span>
-    </div>
-    <div class="chem-bottle" draggable="true" data-chemical="phenolphthalein" id="bottlePhenol">
-      <span class="bottle-icon">⚗️</span>
-      <span class="chem-name">Phenolphtalein</span>
-    </div>
-    <div class="chem-bottle" draggable="true" data-chemical="universalIndicator" id="bottleUniversal">
-      <span class="bottle-icon">🌈</span>
-      <span class="chem-name">Chỉ thị vạn năng</span>
-    </div>
-  </div>
+    <div id="status-bar">Đang tự do</div>
 
-  <div class="action-panel">
-    <button class="reset-btn" id="resetButton">
-      <span>🔄</span> Làm mới thí nghiệm
-    </button>
-    <div style="color:#b9c2d9; font-size:0.85rem;">
-      Kéo thả hoặc nhấn trực tiếp
-    </div>
-  </div>
-</div>
-
-<script>
-  (function() {
-    // --- TRẠNG THÁI HÓA HỌC ---
-    let acidConcentration = 0.0;
-    let baseConcentration = 0.0;
-    let phenolphthaleinAdded = false;
-    let universalIndicatorAdded = false;
-    const VOLUME = 1.0;
-    const MAX_CONCENTRATION = 0.5;
-
-    // DOM elements
-    const canvas = document.getElementById('beakerCanvas');
-    const ctx = canvas.getContext('2d');
-    const solutionNameSpan = document.getElementById('solutionName');
-    const phDisplaySpan = document.getElementById('phDisplay');
-    const statusMessage = document.getElementById('statusMessage');
-    const chemicalDetailText = document.getElementById('chemicalDetailText');
-    const reactionNote = document.getElementById('reactionNote');
-    const beakerDropZone = document.getElementById('beakerDropZone');
-    const bottles = document.querySelectorAll('.chem-bottle');
-
-    // --- MÔ TẢ CHI TIẾT CHO TỪNG HÓA CHẤT ---
-    const chemicalDescriptions = {
-      HCl: {
-        name: 'Axit Clohidric (HCl)',
-        detail: 'Axit mạnh, phân li hoàn toàn trong nước tạo ion H⁺. Làm giảm pH mạnh.',
-        reaction: 'Trung hòa với bazơ, giải phóng nhiệt.'
-      },
-      NaOH: {
-        name: 'Natri Hidroxit (NaOH)',
-        detail: 'Bazơ mạnh, phân li hoàn toàn tạo ion OH⁻. Làm tăng pH mạnh.',
-        reaction: 'Phản ứng mãnh liệt với axit tạo muối và nước.'
-      },
-      phenolphthalein: {
-        name: 'Phenolphtalein (chỉ thị)',
-        detail: 'Chỉ thị pH: không màu khi pH < 8.2, chuyển hồng tím khi pH ≥ 8.2.',
-        reaction: 'Dùng để nhận biết môi trường bazơ.'
-      },
-      universalIndicator: {
-        name: 'Chỉ thị vạn năng',
-        detail: 'Hỗn hợp chỉ thị cho dải màu từ đỏ (axit mạnh) đến tím (bazơ mạnh).',
-        reaction: 'Hiển thị màu theo pH: đỏ, cam, vàng, lục, xanh, tím.'
-      }
-    };
-
-    // --- TÍNH pH ---
-    function calculatePH() {
-      const deltaH = acidConcentration - baseConcentration;
-      if (Math.abs(deltaH) < 1e-9) return 7.0;
-      if (deltaH > 0) {
-        let hPlus = Math.min(deltaH, 1.0);
-        let pH = -Math.log10(hPlus);
-        return Math.round(Math.max(0, pH) * 10) / 10;
-      } else {
-        let ohMinus = Math.min(-deltaH, 1.0);
-        let pOH = -Math.log10(ohMinus);
-        let pH = 14.0 - pOH;
-        return Math.round(Math.min(14, pH) * 10) / 10;
-      }
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
     }
+    </script>
 
-    // --- MÀU DUNG DỊCH ---
-    function getSolutionColor(pH) {
-      if (universalIndicatorAdded) {
-        if (pH < 3) return { r: 220, g: 50, b: 50, alpha: 0.9 };
-        if (pH < 5) return { r: 240, g: 130, b: 40, alpha: 0.9 };
-        if (pH < 6) return { r: 240, g: 200, b: 50, alpha: 0.9 };
-        if (pH <= 7.5) return { r: 120, g: 190, b: 100, alpha: 0.85 };
-        if (pH < 9) return { r: 60, g: 140, b: 190, alpha: 0.9 };
-        if (pH < 11) return { r: 100, g: 80, b: 180, alpha: 0.9 };
-        return { r: 140, g: 70, b: 180, alpha: 0.9 };
-      }
-      if (phenolphthaleinAdded) {
-        return pH >= 8.2 ? { r: 230, g: 80, b: 130, alpha: 0.85 } : { r: 210, g: 225, b: 240, alpha: 0.65 };
-      }
-      if (pH < 3) return { r: 230, g: 240, b: 245, alpha: 0.7 };
-      if (pH > 11) return { r: 190, g: 210, b: 240, alpha: 0.75 };
-      return { r: 200, g: 220, b: 240, alpha: 0.7 };
-    }
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-    // --- CẬP NHẬT GIAO DIỆN ---
-    function updateDisplay() {
-      const pH = calculatePH();
-      phDisplaySpan.textContent = `pH ${pH.toFixed(1)}`;
-      let name = 'Nước tinh khiết';
-      if (acidConcentration > baseConcentration) name = 'Dung dịch axit';
-      else if (baseConcentration > acidConcentration) name = 'Dung dịch bazơ';
-      const indicators = [];
-      if (phenolphthaleinAdded) indicators.push('Phenolphtalein');
-      if (universalIndicatorAdded) indicators.push('C.t vạn năng');
-      if (indicators.length) name += ' + ' + indicators.join(', ');
-      solutionNameSpan.textContent = name;
-      drawBeaker(pH);
-    }
+        // --- 1. SETUP SCENE, CAMERA, RENDERER ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
 
-    function drawBeaker(pH) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const w = canvas.width, h = canvas.height;
-      const left = 55, right = w-55, top = 40, bottom = h-25;
-      const liquidY = bottom - 30;
-      ctx.save();
-      ctx.strokeStyle = '#bcd0f0';
-      ctx.lineWidth = 3.5;
-      ctx.fillStyle = 'rgba(230,242,255,0.08)';
-      ctx.beginPath();
-      ctx.moveTo(left, top);
-      ctx.lineTo(left+14, bottom);
-      ctx.lineTo(right-14, bottom);
-      ctx.lineTo(right, top);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      const color = getSolutionColor(pH);
-      ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${color.alpha})`;
-      ctx.beginPath();
-      ctx.moveTo(left+15, top+16);
-      ctx.lineTo(left+22, liquidY);
-      ctx.lineTo(right-22, liquidY);
-      ctx.lineTo(right-15, top+16);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.2)';
-      ctx.beginPath();
-      ctx.ellipse((left+right)/2, top+16, 50, 5, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // Góc nhìn thứ nhất cao hơn mặt bàn (Bàn cao 1.0, mắt người cao 1.8)
+        camera.position.set(0, 1.8, 5); 
 
-    // --- THÊM HÓA CHẤT ---
-    function addChemical(chemical) {
-      const ADD = 0.08;
-      switch(chemical) {
-        case 'HCl':
-          acidConcentration = Math.min(acidConcentration + ADD, MAX_CONCENTRATION);
-          statusMessage.innerHTML = '<span>🧪</span> Đã thêm HCl vào cốc';
-          break;
-        case 'NaOH':
-          baseConcentration = Math.min(baseConcentration + ADD, MAX_CONCENTRATION);
-          statusMessage.innerHTML = '<span>🧪</span> Đã thêm NaOH vào cốc';
-          break;
-        case 'phenolphthalein':
-          if(!phenolphthaleinAdded) {
-            phenolphthaleinAdded = true;
-            statusMessage.innerHTML = '<span>🌸</span> Đã thêm Phenolphthalein';
-          } else statusMessage.innerHTML = '<span>ℹ️</span> Phenolphthalein đã có';
-          break;
-        case 'universalIndicator':
-          if(!universalIndicatorAdded) {
-            universalIndicatorAdded = true;
-            statusMessage.innerHTML = '<span>🌈</span> Đã thêm chỉ thị vạn năng';
-          } else statusMessage.innerHTML = '<span>ℹ️</span> Chỉ thị đã có';
-          break;
-      }
-      updateDisplay();
-    }
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
 
-    function resetExperiment() {
-      acidConcentration = 0; baseConcentration = 0;
-      phenolphthaleinAdded = false; universalIndicatorAdded = false;
-      statusMessage.innerHTML = '<span>💧</span> Đã làm mới thí nghiệm';
-      chemicalDetailText.textContent = 'Chọn hoặc kéo một lọ hóa chất để xem chi tiết.';
-      reactionNote.innerHTML = '💡 Thả vào cốc để quan sát phản ứng.';
-      updateDisplay();
-    }
+        // --- PointerLock Controls ---
+        const controls = new PointerLockControls(camera, document.body);
+        const blocker = document.getElementById('blocker');
+        
+        blocker.addEventListener('click', () => { controls.lock(); });
+        controls.addEventListener('lock', () => { blocker.style.display = 'none'; });
+        controls.addEventListener('unlock', () => { blocker.style.display = 'flex'; });
 
-    // --- HIỂN THỊ MÔ TẢ KHI CHỌN ---
-    function showChemicalDescription(chemical) {
-      const desc = chemicalDescriptions[chemical];
-      if (desc) {
-        chemicalDetailText.textContent = desc.detail;
-        reactionNote.innerHTML = `🧪 ${desc.reaction}`;
-      }
-    }
+        // --- 2. ÁNH SÁNG ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
 
-    // --- KÉO THẢ (DRAG & DROP) ---
-    function setupDragAndDrop() {
-      bottles.forEach(bottle => {
-        bottle.addEventListener('dragstart', handleDragStart);
-        bottle.addEventListener('dragend', handleDragEnd);
-        // Vẫn giữ click để thêm nhanh
-        bottle.addEventListener('click', (e) => {
-          const chem = bottle.getAttribute('data-chemical');
-          addChemical(chem);
-          showChemicalDescription(chem);
+        const mainLight = new THREE.PointLight(0xffffff, 50, 30);
+        mainLight.position.set(0, 4, 0);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+
+        const room2Light = new THREE.PointLight(0xffffff, 40, 30);
+        room2Light.position.set(0, 4, -8);
+        room2Light.castShadow = true;
+        scene.add(room2Light);
+
+        // --- VẬT LIỆU CHUNG ---
+        const glassMaterial = new THREE.MeshPhongMaterial({
+            color: 0xcccccc,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.4,
+            shininess: 120,
+            specular: 0xffffff
         });
-      });
 
-      beakerDropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        beakerDropZone.classList.add('drop-zone-highlight');
-      });
-      beakerDropZone.addEventListener('dragleave', () => {
-        beakerDropZone.classList.remove('drop-zone-highlight');
-      });
-      beakerDropZone.addEventListener('drop', handleDrop);
-    }
+        const liquidMaterials = {
+            'NaCl': new THREE.MeshPhongMaterial({ color: 0x3a86ff, transparent: true, opacity: 0.8 }), // Xanh dương nhạt
+            'AgNO3': new THREE.MeshPhongMaterial({ color: 0xffbe0b, transparent: true, opacity: 0.8 }), // Vàng nhạt
+            'Reacted': new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 }) // Kết tủa trắng loang
+        };
 
-    function handleDragStart(e) {
-      const bottle = e.target.closest('.chem-bottle');
-      if (!bottle) return;
-      bottle.classList.add('dragging');
-      e.dataTransfer.setData('text/plain', bottle.getAttribute('data-chemical'));
-      e.dataTransfer.effectAllowed = 'move';
-    }
+        const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7 });
+        const metalMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.2 });
 
-    function handleDragEnd(e) {
-      const bottle = e.target.closest('.chem-bottle');
-      if (bottle) bottle.classList.remove('dragging');
-      beakerDropZone.classList.remove('drop-zone-highlight');
-    }
+        // --- 3. KIẾN TRÚC PHÒNG THÍ NGHIỆM & VA CHẠM ---
+        const collidableObjects = []; // Mảng chứa vật cản di chuyển
+        const interactableObjects = []; // Mảng chứa vật thể tương tác được (E, F, Chuột)
 
-    function handleDrop(e) {
-      e.preventDefault();
-      beakerDropZone.classList.remove('drop-zone-highlight');
-      const chemical = e.dataTransfer.getData('text/plain');
-      if (chemical && chemicalDescriptions[chemical]) {
-        addChemical(chemical);
-        showChemicalDescription(chemical);
-      }
-    }
+        // Sàn phòng 1 và phòng 2
+        const floorGeo = new THREE.PlaneGeometry(20, 30);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(0, 0, -3);
+        floor.receiveShadow = true;
+        scene.add(floor);
 
-    // Khởi tạo
-    window.addEventListener('load', () => {
-      setupDragAndDrop();
-      updateDisplay();
-      document.getElementById('resetButton').addEventListener('click', resetExperiment);
-    });
-  })();
-</script>
+        // Grid trang trí mặt sàn
+        const gridHelper = new THREE.GridHelper(30, 30, 0x555555, 0x333333);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // Các bức tường xung quanh phòng thí nghiệm
+        function createWall(w, h, d, x, y, z, color = 0x555566) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mat = new THREE.MeshStandardMaterial({ color: color });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            scene.add(mesh);
+            collidableObjects.push(mesh);
+            return mesh;
+        }
+
+        // Tường bao quanh phòng lớn
+        createWall(20, 5, 0.5, 0, 2.5, 7); // Tường sau Phòng 1
+        createWall(20, 5, 0.5, 0, 2.5, -13); // Tường trước Phòng 2
+        createWall(0.5, 5, 20, -10, 2.5, -3); // Tường Trái
+        createWall(0.5, 5, 20, 10, 2.5, -3); // Tường Phải
+
+        // Bức tường ngăn đôi phòng 1 và phòng 2 (Có khe cửa ở giữa)
+        createWall(8, 5, 0.5, -6, 2.5, -3); // Ngăn trái
+        createWall(8, 5, 0.5, 6, 2.5, -3); // Ngăn phải
+        createWall(4, 1.5, 0.5, 0, 4.25, -3); // Khối tường trên cửa
+
+        // --- CỬA NỐI HAI PHÒNG (Tương tác bằng phím E) ---
+        const doorPivot = new THREE.Group();
+        doorPivot.position.set(-2, 0, -3); // Bản lề cửa nằm ở mép trái
+        scene.add(doorPivot);
+
+        const doorGeo = new THREE.BoxGeometry(4, 3.5, 0.1);
+        const doorMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
+        const doorMesh = new THREE.Mesh(doorGeo, doorMat);
+        doorMesh.position.set(2, 1.75, 0); // Dịch chuyển tâm mesh để quay quanh pivot bản lề
+        doorMesh.castShadow = true;
+        doorPivot.add(doorMesh);
+        collidableObjects.push(doorMesh);
+
+        const doorObj = {
+            mesh: doorMesh,
+            type: 'door',
+            isOpen: false,
+            interact: function() {
+                this.isOpen = !this.isOpen;
+                const targetRotation = this.isOpen ? Math.PI / 2 : 0;
+                new TWEEN.Tween(doorPivot.rotation)
+                    .to({ y: targetRotation }, 500)
+                    .start();
+                updateStatusText(this.isOpen ? "Đã mở cửa nối" : "Đã đóng cửa nối");
+            }
+        };
+        interactableObjects.push(doorObj);
+
+        // --- BẢNG XANH PHÒNG 1 (Cạnh cửa) ---
+        const boardGeo = new THREE.BoxGeometry(3, 1.8, 0.1);
+        const boardMat = new THREE.MeshStandardMaterial({ color: 0x0c3c26 }); // Màu xanh bảng học
+        const board = new THREE.Mesh(boardGeo, boardMat);
+        board.position.set(3, 2, -2.9);
+        scene.add(board);
+
+        // Canvas vẽ chữ lên bảng
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0c3c26';
+        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('STEM VÌ TƯƠNG LAI', 256, 100);
+        ctx.font = '24px Arial';
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('cre: Xuân Lâm, Gia Bảo', 256, 170);
+
+        const boardTex = new THREE.CanvasTexture(canvas);
+        const boardTextGeo = new THREE.PlaneGeometry(2.9, 1.7);
+        const boardTextMat = new THREE.MeshBasicMaterial({ map: boardTex, transparent: true });
+        const boardText = new THREE.Mesh(boardTextGeo, boardTextMat);
+        boardText.position.set(3, 2, -2.84);
+        scene.add(boardText);
+
+        // --- BÀN ĐÁ PHÒNG 1 ---
+        const table1Geo = new THREE.BoxGeometry(6, 1.0, 2);
+        const table1Mat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.1 }); // Đá Marble trắng
+        const table1 = new THREE.Mesh(table1Geo, table1Mat);
+        table1.position.set(0, 0.5, 2);
+        table1.castShadow = true;
+        table1.receiveShadow = true;
+        scene.add(table1);
+        collidableObjects.push(table1);
+
+        // --- KỆ ĐỂ CHAI HÓA CHẤT PHÒNG 2 ---
+        const shelfGeo = new THREE.BoxGeometry(4, 0.1, 0.8);
+        const shelf = new THREE.Mesh(shelfGeo, woodMaterial);
+        shelf.position.set(-6, 1.5, -8);
+        shelf.castShadow = true;
+        scene.add(shelf);
+        collidableObjects.push(shelf);
+
+        // --- TỦ ĐỰNG DỤNG CỤ PHÒNG 2 (Có hai cánh đóng mở E) ---
+        const cabinetGroup = new THREE.Group();
+        cabinetGroup.position.set(6, 0, -8);
+        scene.add(cabinetGroup);
+
+        // Thân tủ không cánh
+        const cabBack = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 0.1), woodMaterial);
+        cabBack.position.set(0, 1.5, -0.6);
+        const cabLeft = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 1.2), woodMaterial);
+        cabLeft.position.set(-1.5, 1.5, 0);
+        const cabRight = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 1.2), woodMaterial);
+        cabRight.position.set(1.5, 1.5, 0);
+        const cabTop = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.1, 1.3), woodMaterial);
+        cabTop.position.set(0, 3, 0);
+        const cabBottom = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.1, 1.3), woodMaterial);
+        cabBottom.position.set(0, 0.05, 0);
+        const cabShelf = new THREE.Mesh(new THREE.BoxGeometry(3, 0.05, 1.1), woodMaterial); // Ngăn kệ giữa tủ
+        cabShelf.position.set(0, 1.5, 0);
+
+        cabinetGroup.add(cabBack, cabLeft, cabRight, cabTop, cabBottom, cabShelf);
+        collidableObjects.push(cabLeft, cabRight); // Cản người chơi đi xuyên qua hông tủ
+
+        // Cánh tủ trái (Bản lề bên trái tủ)
+        const doorLeftPivot = new THREE.Group();
+        doorLeftPivot.position.set(-1.5, 1.5, 0.6);
+        cabinetGroup.add(doorLeftPivot);
+        const cabDoorLeft = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.9, 0.05), woodMaterial);
+        cabDoorLeft.position.set(0.75, 0, 0);
+        doorLeftPivot.add(cabDoorLeft);
+
+        // Cánh tủ phải (Bản lề bên phải tủ)
+        const doorRightPivot = new THREE.Group();
+        doorRightPivot.position.set(1.5, 1.5, 0.6);
+        cabinetGroup.add(doorRightPivot);
+        const cabDoorRight = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.9, 0.05), woodMaterial);
+        cabDoorRight.position.set(-0.75, 0, 0);
+        doorRightPivot.add(cabDoorRight);
+
+        const cabinetDoorObj = {
+            mesh: cabDoorLeft, // Định danh tương tác dựa trên phần mesh ngắm trúng
+            type: 'cabinet_doors',
+            isOpen: false,
+            interact: function() {
+                this.isOpen = !this.isOpen;
+                const leftTarget = this.isOpen ? -Math.PI * 0.75 : 0;
+                const rightTarget = this.isOpen ? Math.PI * 0.75 : 0;
+                new TWEEN.Tween(doorLeftPivot.rotation).to({ y: leftTarget }, 600).start();
+                new TWEEN.Tween(doorRightPivot.rotation).to({ y: rightTarget }, 600).start();
+                updateStatusText(this.isOpen ? "Đã mở tủ dụng cụ" : "Đã đóng tủ dụng cụ");
+            }
+        };
+        interactableObjects.push(cabinetDoorObj);
+
+        // --- 4. KHỞI TẠO CÁC DỤNG CỤ VÀ HÓA CHẤT THÍ NGHIỆM ---
+        let holdingObject = null; // Biến lưu trữ vật dụng đang được người chơi cầm trên tay
+
+        // Hệ thống chuyển đổi tọa độ khi Cầm / Đặt đồ vật
+        function grabObject(interactObj) {
+            if (holdingObject) return; // Chỉ cầm được 1 thứ tại một thời điểm
+            holdingObject = interactObj;
+            scene.remove(interactObj.mesh);
+            camera.add(interactObj.mesh); // Đưa vật thể vào góc camera để tạo hiệu ứng cầm trên tay
+            
+            // Định vị vật thể phía trước camera
+            interactObj.mesh.position.set(0.4, -0.4, -0.8);
+            interactObj.mesh.rotation.set(0, Math.PI / 4, 0);
+            updateStatusText(`Đang cầm: ${interactObj.name}`);
+        }
+
+        function dropObject() {
+            if (!holdingObject) return;
+            const dropMesh = holdingObject.mesh;
+            camera.remove(dropMesh);
+            scene.add(dropMesh);
+
+            // Đặt vật thể ngay phía trước hướng người chơi đang nhìn trên mặt phẳng gần nhất (Bàn hoặc kệ)
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects([table1, shelf, cabShelf, floor]);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                dropMesh.position.copy(hit.point);
+                dropMesh.position.y += holdingObject.offsetY; // Bù khoảng hở tâm hình học của vật
+                dropMesh.rotation.set(0, 0, 0);
+            } else {
+                // Rơi tự do xuống sàn phòng thí nghiệm phía trước chân
+                const front = new THREE.Vector3();
+                camera.getWorldDirection(front);
+                dropMesh.position.copy(camera.position).addScaledVector(front, 1.5);
+                dropMesh.position.y = holdingObject.offsetY;
+                dropMesh.rotation.set(0, 0, 0);
+            }
+            updateStatusText(`Đã đặt ${holdingObject.name} xuống`);
+            holdingObject = null;
+        }
+
+        // --- 1. Tạo cốc thủy tinh Beaker 250ml ---
+        function createBeaker(x, y, z, name) {
+            const group = new THREE.Group();
+            
+            const bodyGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32, 1, true);
+            const body = new THREE.Mesh(bodyGeo, glassMaterial);
+            
+            const bottomGeo = new THREE.CircleGeometry(0.2, 32);
+            const bottom = new THREE.Mesh(bottomGeo, glassMaterial);
+            bottom.rotation.x = Math.PI / 2;
+            bottom.position.y = -0.25;
+
+            // Vạch chia độ nhỏ trang trí trên thành cốc
+            const lineGeo = new THREE.BoxGeometry(0.05, 0.01, 0.01);
+            const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            for(let i = -0.15; i <= 0.15; i += 0.08) {
+                const line = new THREE.Mesh(lineGeo, lineMat);
+                line.position.set(0.19, i, 0);
+                group.add(line);
+            }
+            
+            group.add(body, bottom);
+            group.position.set(x, y, z);
+            scene.add(group);
+
+            const beakerObj = {
+                mesh: group,
+                name: name,
+                type: 'beaker',
+                offsetY: 0.25,
+                liquidType: null,
+                liquidAmount: 0, // Đơn vị: ml
+                liquidMesh: null,
+                addLiquid: function(type, amount) {
+                    if (this.liquidType && this.liquidType !== type) {
+                        // Phản ứng hóa học xảy ra ngay trong cốc khi đổ chung 2 chất!
+                        if ((this.liquidType === 'NaCl' && type === 'AgNO3') || (this.liquidType === 'AgNO3' && type === 'NaCl')) {
+                            this.liquidType = 'Reacted';
+                            this.liquidMesh.material = liquidMaterials['Reacted'];
+                            triggerPrecipitationEffect(this.mesh, 0.2);
+                        }
+                    } else {
+                        this.liquidType = type;
+                    }
+                    this.liquidAmount = Math.min(250, this.liquidAmount + amount);
+                    this.updateLiquidVisual();
+                },
+                updateLiquidVisual: function() {
+                    if (this.liquidMesh) group.remove(this.liquidMesh);
+                    if (this.liquidAmount <= 0) return;
+
+                    const heightRatio = this.liquidAmount / 250;
+                    const h = 0.45 * heightRatio;
+                    const liqGeo = new THREE.CylinderGeometry(0.19, 0.19, h, 32);
+                    const liqMesh = new THREE.Mesh(liqGeo, liquidMaterials[this.liquidType]);
+                    liqMesh.position.y = -0.25 + h/2;
+                    this.liquidMesh = liqMesh;
+                    group.add(liqMesh);
+                }
+            };
+
+            interactableObjects.push(beakerObj);
+            return beakerObj;
+        }
+
+        // --- 2. Tạo Giá Đỡ và Ống Nghiệm ---
+        const testTubesInRack = [null, null, null, null]; // Quản lý 4 khe cắm trên giá đỡ ống nghiệm
+
+        function createTestTubeRackAndTubes(x, y, z) {
+            const rack = new THREE.Group();
+            
+            // Thiết kế giá nhựa tương tự cấu trúc mô tả trong DOCTYPE html 1.docx
+            const baseGeo = new THREE.BoxGeometry(1.6, 0.1, 0.6);
+            const base = new THREE.Mesh(baseGeo, woodMaterial);
+            const top = base.clone();
+            top.position.y = 0.5;
+            
+            rack.add(base, top);
+
+            const legGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.5);
+            for(let i=0; i<4; i++) {
+                const leg = new THREE.Mesh(legGeo, woodMaterial);
+                leg.position.set(i % 2 === 0 ? 0.75 : -0.75, 0.25, i < 2 ? 0.25 : -0.25);
+                rack.add(leg);
+            }
+
+            rack.position.set(x, y, z);
+            scene.add(rack);
+
+            // Thêm 4 Ống nghiệm đặt trực tiếp trên giá khi bắt đầu
+            const tubeSpacing = 0.35;
+            for(let i = 0; i < 4; i++) {
+                const tx = x - 0.52 + (i * tubeSpacing);
+                const tubeObj = createTestTube(tx, y + 0.35, z, i);
+                testTubesInRack[i] = tubeObj;
+            }
+
+            // Đối tượng tương tác Giá đỡ ống nghiệm để cất/nhấc ống nghiệm
+            const rackObj = {
+                mesh: base,
+                type: 'rack',
+                interact: function() {
+                    // Xử lý cất hoặc lấy ống nghiệm bằng Chuột trái khi chỉ định
+                }
+            };
+            interactableObjects.push(rackObj);
+        }
+
+        function createTestTube(x, y, z, slotIndex) {
+            const group = new THREE.Group();
+            
+            // Thân ống nghiệm thủy tinh
+            const tubeGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16, 1, true);
+            const tube = new THREE.Mesh(tubeGeo, glassMaterial);
+            
+            // Đáy bán cầu
+            const bottomGeo = new THREE.SphereGeometry(0.08, 16, 8, 0, Math.PI * 2, Math.PI/2, Math.PI/2);
+            const bottom = new THREE.Mesh(bottomGeo, glassMaterial);
+            bottom.position.y = -0.3;
+
+            group.add(tube, bottom);
+            group.position.set(x, y, z);
+            scene.add(group);
+
+            const tubeObj = {
+                mesh: group,
+                name: `Ống nghiệm ${slotIndex + 1}`,
+                type: 'test_tube',
+                offsetY: 0.3,
+                slot: slotIndex,
+                liquidType: null,
+                liquidAmount: 0, // Đơn vị: ml (Max: 30ml)
+                liquidMesh: null,
+                addLiquid: function(type, amount) {
+                    if (this.liquidType && this.liquidType !== type) {
+                        // Xảy ra kết tủa ngay lập tức khi trộn NaCl + AgNO3 trong ống nghiệm
+                        if ((this.liquidType === 'NaCl' && type === 'AgNO3') || (this.liquidType === 'AgNO3' && type === 'NaCl')) {
+                            this.liquidType = 'Reacted';
+                            this.liquidMesh.material = liquidMaterials['Reacted'];
+                            triggerPrecipitationEffect(this.mesh, 0.08);
+                        }
+                    } else {
+                        this.liquidType = type;
+                    }
+                    this.liquidAmount = Math.min(30, this.liquidAmount + amount);
+                    this.updateLiquidVisual();
+                },
+                updateLiquidVisual: function() {
+                    if (this.liquidMesh) group.remove(this.liquidMesh);
+                    if (this.liquidAmount <= 0) return;
+
+                    const heightRatio = this.liquidAmount / 30;
+                    const h = 0.5 * heightRatio;
+                    const liqGeo = new THREE.CylinderGeometry(0.075, 0.075, h, 16);
+                    const liqMesh = new THREE.Mesh(liqGeo, liquidMaterials[this.liquidType]);
+                    liqMesh.position.y = -0.3 + h/2;
+                    this.liquidMesh = liqMesh;
+                    group.add(liqMesh);
+                }
+            };
+
+            interactableObjects.push(tubeObj);
+            return tubeObj;
+        }
+
+        // --- 3. Tạo Chai Hóa Chất Đựng NaCl & AgNO3 (Dựa trên DOCTYPE html2.docx) ---
+        function createChemicalBottle(x, y, z, name, colorType) {
+            const group = new THREE.Group();
+            
+            // Thân chai thủy tinh màu xám bóng
+            const bodyGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.5, 32);
+            const body = new THREE.Mesh(bodyGeo, glassMaterial);
+            
+            // Cổ chai hẹp
+            const neckGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.15, 32);
+            const neck = new THREE.Mesh(neckGeo, glassMaterial);
+            neck.position.y = 0.325;
+
+            // Nắp chai (Có thể xoay hoặc mở ra bằng phím F)
+            const capGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.08, 32);
+            const cap = new THREE.Mesh(capGeo, metalMaterial);
+            cap.position.y = 0.41;
+            group.add(cap);
+
+            // Nhãn dán ghi tên hóa chất
+            const labelGeo = new THREE.PlaneGeometry(0.2, 0.25);
+            const labelCanvas = document.createElement('canvas');
+            labelCanvas.width = 128;
+            labelCanvas.height = 128;
+            const lCtx = labelCanvas.getContext('2d');
+            lCtx.fillStyle = '#ffffff';
+            lCtx.fillRect(0,0,128,128);
+            lCtx.fillStyle = '#000000';
+            lCtx.font = 'bold 36px Arial';
+            lCtx.textAlign = 'center';
+            lCtx.fillText(name, 64, 75);
+            const labelTex = new THREE.CanvasTexture(labelCanvas);
+            const labelMat = new THREE.MeshBasicMaterial({ map: labelTex });
+            const label = new THREE.Mesh(labelGeo, labelMat);
+            label.position.set(0, 0, 0.185);
+
+            // Dung dịch hóa chất nguyên bản đổ đầy chai
+            const liqGeo = new THREE.CylinderGeometry(0.17, 0.17, 0.4, 32);
+            const liq = new THREE.Mesh(liqGeo, liquidMaterials[colorType]);
+            liq.position.y = -0.05;
+
+            group.add(body, neck, label, liq);
+            group.position.set(x, y, z);
+            scene.add(group);
+
+            const bottleObj = {
+                mesh: group,
+                name: `Chai đựng ${name}`,
+                type: 'bottle',
+                chemical: colorType,
+                offsetY: 0.25,
+                isOpen: false,
+                capMesh: cap,
+                interact: function() {
+                    // Cầm hoặc đặt chai bằng nút E
+                },
+                toggleCap: function() {
+                    this.isOpen = !this.isOpen;
+                    if (this.isOpen) {
+                        new TWEEN.Tween(this.capMesh.position).to({ y: 0.6 }, 300).start();
+                        updateStatusText(`Đã mở nắp chai ${name}`);
+                    } else {
+                        new TWEEN.Tween(this.capMesh.position).to({ y: 0.41 }, 300).start();
+                        updateStatusText(`Đã đóng nắp chai ${name}`);
+                    }
+                }
+            };
+            interactableObjects.push(bottleObj);
+        }
+
+        // --- 4. Tạo Pipet Nhỏ Giọt (Dựa trên DOCTYPE html pipet.docx) ---
+        function createPipet(x, y, z) {
+            const group = new THREE.Group();
+
+            // Phần bầu bóp cao su màu đỏ phía trên
+            const bulbGeo = new THREE.SphereGeometry(0.04, 16, 16);
+            const bulbMat = new THREE.MeshPhongMaterial({ color: 0xcc3333 });
+            const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+            bulb.position.y = 0.25;
+
+            // Ống nhỏ giọt thủy tinh dài và nhọn ở đáy
+            const tubeGeo = new THREE.CylinderGeometry(0.015, 0.005, 0.4, 16, 1, false);
+            const tube = new THREE.Mesh(tubeGeo, glassMaterial);
+            tube.position.y = 0.05;
+
+            group.add(bulb, tube);
+            group.position.set(x, y, z);
+            scene.add(group);
+
+            const pipetObj = {
+                mesh: group,
+                name: "Pipet nhỏ giọt",
+                type: 'pipet',
+                offsetY: 0.2,
+                heldLiquid: null, // Dung dịch hiện tại đang giữ ('NaCl' hoặc 'AgNO3')
+                heldAmount: 0,    // Thể tích chất lỏng hút được (Max: 5ml)
+                liquidMesh: null,
+                action: function() {
+                    // Xử lý hút / nhỏ dung dịch bằng chuột trái
+                    const raycaster = new THREE.Raycaster();
+                    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+                    
+                    // Tìm kiếm các vật thể trước mắt
+                    const hits = raycaster.intersectObjects(scene.children, true);
+                    if (hits.length === 0) return;
+
+                    let hitTarget = null;
+                    for (let hit of hits) {
+                        const found = interactableObjects.find(o => o.mesh === hit.object || o.mesh.getObjectById(hit.object.id) || (hit.object.parent && o.mesh === hit.object.parent));
+                        if (found) {
+                            hitTarget = found;
+                            break;
+                        }
+                    }
+
+                    if (!hitTarget) return;
+
+                    // 1. Trường hợp hút dung dịch từ chai hóa chất
+                    if (hitTarget.type === 'bottle') {
+                        if (!hitTarget.isOpen) {
+                            updateStatusText("Hãy mở nắp chai hóa chất trước! [Nhấn F]");
+                            return;
+                        }
+                        if (this.heldAmount >= 5) {
+                            updateStatusText("Pipet đã đầy hóa chất (5ml)");
+                            return;
+                        }
+                        this.heldLiquid = hitTarget.chemical;
+                        this.heldAmount = Math.min(5, this.heldAmount + 1); // Mỗi lần click hút thêm 1ml
+                        this.updateVisual();
+                        updateStatusText(`Đã hút ${this.heldAmount}ml ${this.heldLiquid}`);
+                    }
+                    // 2. Trường hợp nhỏ giọt vào ống nghiệm
+                    else if (hitTarget.type === 'test_tube') {
+                        if (this.heldAmount <= 0) {
+                            updateStatusText("Pipet rỗng! Hãy hút hóa chất từ chai");
+                            return;
+                        }
+                        hitTarget.addLiquid(this.heldLiquid, 1);
+                        this.heldAmount -= 1;
+                        if (this.heldAmount <= 0) this.heldLiquid = null;
+                        this.updateVisual();
+                        updateStatusText(`Đã nhỏ 1ml vào ${hitTarget.name}`);
+                    }
+                    // 3. Trường hợp nhỏ giọt vào cốc thủy tinh
+                    else if (hitTarget.type === 'beaker') {
+                        if (this.heldAmount <= 0) {
+                            updateStatusText("Pipet rỗng! Hãy hút hóa chất");
+                            return;
+                        }
+                        hitTarget.addLiquid(this.heldLiquid, 1);
+                        this.heldAmount -= 1;
+                        if (this.heldAmount <= 0) this.heldLiquid = null;
+                        this.updateVisual();
+                        updateStatusText(`Đã nhỏ 1ml vào cốc ${hitTarget.name}`);
+                    }
+                },
+                updateVisual: function() {
+                    if (this.liquidMesh) group.remove(this.liquidMesh);
+                    if (this.heldAmount <= 0) return;
+
+                    // Hiển thị phần dung dịch màu đại diện trong thân ống thủy tinh của Pipet
+                    const heightRatio = this.heldAmount / 5;
+                    const h = 0.25 * heightRatio;
+                    const liqGeo = new THREE.CylinderGeometry(0.012, 0.008, h, 16);
+                    const liqMesh = new THREE.Mesh(liqGeo, liquidMaterials[this.heldLiquid]);
+                    liqMesh.position.y = 0.05 + h/2;
+                    this.liquidMesh = liqMesh;
+                    group.add(liqMesh);
+                }
+            };
+
+            interactableObjects.push(pipetObj);
+            return pipetObj;
+        }
+
+        // --- TẠO HỘP KẾT TỦA HOẶC HIỆU ỨNG HÓA HỌC (LOANG TRẮNG) ---
+        function triggerPrecipitationEffect(parentGroup, size) {
+            // Tạo một đám mây kết tủa màu trắng đục tự động loang dần ra
+            const particlesGeo = new THREE.SphereGeometry(size, 16, 16);
+            const particlesMat = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.1
+            });
+            const cloud = new THREE.Mesh(particlesGeo, particlesMat);
+            cloud.position.y = -size;
+            parentGroup.add(cloud);
+
+            // Loang hạt/màu mờ đục đại diện cho kết tủa AgCl trắng
+            new TWEEN.Tween(cloud.scale)
+                .to({ x: 1.2, y: 1.2, z: 1.2 }, 1500)
+                .start();
+            new TWEEN.Tween(cloud.material)
+                .to({ opacity: 0.8 }, 1000)
+                .start();
+        }
+
+        // --- KHỞI TẠO TOÀN BỘ VẬT THỂ Ở CÁC VỊ TRÍ CHỈ ĐỊNH ---
+        // Phòng 2: Chai NaCl, AgNO3 trên kệ
+        createChemicalBottle(-5, 1.75, -8, 'NaCl', 'NaCl');
+        createChemicalBottle(-7, 1.75, -8, 'AgNO3', 'AgNO3');
+
+        // Phòng 2: Các đồ vật nằm trong tủ dụng cụ
+        const beaker1 = createBeaker(5.5, 1.85, -8, '250ml A'); // Trong tủ ngăn trên
+        const pipet1 = createPipet(6.5, 0.35, -8); // Trong tủ ngăn dưới
+
+        // Phòng 1: Giá để ống nghiệm và 4 ống nghiệm nằm trên bàn đá
+        createTestTubeRackAndTubes(0, 1.05, 2);
+
+
+        // --- UI STATUS UPDATE ---
+        const statusEl = document.getElementById('status-bar');
+        function updateStatusText(txt) {
+            statusEl.innerText = txt;
+        }
+
+        // --- 5. ĐIỀU KHIỂN NHÂN VẬT & VA CHẠM (FIRST PERSON) ---
+        const moveState = { forward: false, backward: false, left: false, right: false, jump: false };
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let isGrounded = true;
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.code) {
+                case 'KeyW': moveState.forward = true; break;
+                case 'KeyS': moveState.backward = true; break;
+                case 'KeyA': moveState.left = true; break;
+                case 'KeyD': moveState.right = true; break;
+                case 'Space': 
+                    if (isGrounded) {
+                        velocity.y += 5.0; // Nhảy cao
+                        isGrounded = false;
+                    }
+                    break;
+                case 'KeyE':
+                    handleEInteraction();
+                    break;
+                case 'KeyF':
+                    handleFInteraction();
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.code) {
+                case 'KeyW': moveState.forward = false; break;
+                case 'KeyS': moveState.backward = false; break;
+                case 'KeyA': moveState.left = false; break;
+                case 'KeyD': moveState.right = false; break;
+            }
+        });
+
+        // Hút / Nhỏ bằng Chuột Trái khi cầm Pipet
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && controls.isLocked) {
+                if (holdingObject && holdingObject.type === 'pipet') {
+                    holdingObject.action();
+                } else {
+                    // Click chuột vào các ống nghiệm ở giá đỡ để cất / nhấc ống nghiệm ra
+                    handleMouseInteraction();
+                }
+            }
+        });
+
+        // --- TƯƠNG TÁC PHÍM E (Cầm/Mở cửa/Đặt đồ) ---
+        function handleEInteraction() {
+            if (holdingObject) {
+                dropObject();
+                return;
+            }
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                if (hit.distance > 3) return; // Khoảng cách tương tác gần
+
+                // Duyệt tìm đối tượng tương ứng trong cơ sở dữ liệu tương tác
+                let interactObj = null;
+                for (let io of interactableObjects) {
+                    if (io.mesh === hit.object || io.mesh.getObjectById(hit.object.id) || (hit.object.parent && io.mesh === hit.object.parent)) {
+                        interactObj = io;
+                        break;
+                    }
+                }
+
+                if (interactObj) {
+                    if (interactObj.type === 'door' || interactObj.type === 'cabinet_doors') {
+                        interactObj.interact();
+                    } else if (['pipet', 'beaker', 'test_tube', 'bottle'].includes(interactObj.type)) {
+                        grabObject(interactObj);
+                    }
+                }
+            }
+        }
+
+        // --- TƯƠNG TÁC PHÍM F (Mở nắp chai) ---
+        function handleFInteraction() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                if (hit.distance > 3) return;
+
+                let interactObj = null;
+                for (let io of interactableObjects) {
+                    if (io.mesh === hit.object || io.mesh.getObjectById(hit.object.id) || (hit.object.parent && io.mesh === hit.object.parent)) {
+                        interactObj = io;
+                        break;
+                    }
+                }
+
+                if (interactObj && interactObj.type === 'bottle') {
+                    interactObj.toggleCap();
+                }
+            }
+        }
+
+        // --- TƯƠNG TÁC CHUỘT TRÁI (Lắp / Lấy ống nghiệm khỏi giá đỡ) ---
+        function handleMouseInteraction() {
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                if (hit.distance > 3) return;
+
+                // Tìm ống nghiệm ngắm vào
+                let tubeObj = null;
+                for (let io of interactableObjects) {
+                    if (io.type === 'test_tube' && (io.mesh === hit.object || io.mesh.getObjectById(hit.object.id) || (hit.object.parent && io.mesh === hit.object.parent))) {
+                        tubeObj = io;
+                        break;
+                    }
+                }
+
+                if (tubeObj) {
+                    // Nếu đang rảnh tay, nhấc ống nghiệm khỏi khay
+                    if (!holdingObject) {
+                        const idx = testTubesInRack.indexOf(tubeObj);
+                        if (idx !== -1) {
+                            testTubesInRack[idx] = null; // Làm trống khe đỡ
+                        }
+                        grabObject(tubeObj);
+                    }
+                }
+                // Nếu đang cầm ống nghiệm, muốn đặt lại vào khe giá đỡ trống
+                else if (holdingObject && holdingObject.type === 'test_tube') {
+                    const hitRack = intersects.find(h => h.object.geometry.type === 'BoxGeometry' && h.distance < 3);
+                    if (hitRack) {
+                        // Tìm khe trống
+                        const freeSlot = testTubesInRack.indexOf(null);
+                        if (freeSlot !== -1) {
+                            const tubeMesh = holdingObject.mesh;
+                            camera.remove(tubeMesh);
+                            scene.add(tubeMesh);
+
+                            // Tính toán tọa độ đặt vào khe tương ứng
+                            const rx = 0 - 0.52 + (freeSlot * 0.35); // Vị trí x của khe cắm tương ứng trên bàn
+                            tubeMesh.position.set(rx, 1.05 + 0.35, 2);
+                            tubeMesh.rotation.set(0, 0, 0);
+
+                            testTubesInRack[freeSlot] = holdingObject;
+                            updateStatusText(`Đã đặt ${holdingObject.name} vào giá đỡ`);
+                            holdingObject = null;
+                        } else {
+                            updateStatusText("Giá đỡ đã đầy 4 ống nghiệm!");
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- VÒNG LẶP RENDER & CẬP NHẬT TRẠNG THÁI DI CHUYỂN ---
+        const clock = new THREE.Clock();
+
+        function checkCollision(nextPos) {
+            // Định nghĩa vùng không gian biên của từng khối cản để người chơi không đi xuyên qua
+            // 1. Tường biên của căn phòng
+            if (nextPos.x > 9.5 || nextPos.x < -9.5) return true;
+            if (nextPos.z > 6.5 || nextPos.z < -12.5) return true;
+
+            // 2. Tường ngăn phòng 1 - Phòng 2 (chừa khe cửa từ x = -2 đến 2 khi cửa đóng)
+            if (Math.abs(nextPos.z - (-3)) < 0.4) {
+                if (!doorObj.isOpen) {
+                    // Nếu cửa đóng, chặn toàn bộ dọc tường ngăn z = -3
+                    return true;
+                } else {
+                    // Nếu cửa mở, cho phép đi qua khe cửa từ -2 đến 2
+                    if (nextPos.x < -1.8 || nextPos.x > 1.8) return true;
+                }
+            }
+
+            // 3. Bàn đá phòng 1 (x: -3 -> 3, z: 1 -> 3)
+            if (nextPos.x > -3.2 && nextPos.x < 3.2 && nextPos.z > 0.8 && nextPos.z < 3.2) return true;
+
+            // 4. Kệ gỗ đựng hóa chất (x: -8 -> -4, z: -8.5 -> -7.5)
+            if (nextPos.x > -8.2 && nextPos.x < -3.8 && nextPos.z > -8.5 && nextPos.z < -7.5) return true;
+
+            // 5. Tủ đựng dụng cụ (x: 4.5 -> 7.5, z: -8.5 -> -7.5)
+            if (nextPos.x > 4.2 && nextPos.x < 7.8 && nextPos.z > -8.6 && nextPos.z < -7.4) return true;
+
+            return false;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Cập nhật hoạt cảnh mượt mà
+            TWEEN.update();
+
+            if (controls.isLocked) {
+                const delta = clock.getDelta();
+
+                // Giảm quán tính di chuyển tự nhiên
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                
+                // Trọng lực rơi tự do
+                velocity.y -= 9.8 * 1.5 * delta;
+
+                direction.z = Number(moveState.forward) - Number(moveState.backward);
+                direction.x = Number(moveState.right) - Number(moveState.left);
+                direction.normalize();
+
+                // Tính toán di chuyển dọc/ngang
+                if (moveState.forward || moveState.backward) velocity.z -= direction.z * 15.0 * delta;
+                if (moveState.left || moveState.right) velocity.x -= direction.x * 15.0 * delta;
+
+                // Lưu lại vị trí hiện tại
+                const prevPosition = camera.position.clone();
+
+                // Thử áp dụng di chuyển mới
+                controls.moveRight(-velocity.x * delta);
+                controls.moveForward(-velocity.z * delta);
+                camera.position.y += (velocity.y * delta);
+
+                // Nếu chạm đất
+                if (camera.position.y < 1.8) {
+                    velocity.y = 0;
+                    camera.position.y = 1.8; // Chiều cao góc mắt người chơi luôn chuẩn 1.8
+                    isGrounded = true;
+                }
+
+                // Xử lý chặn va chạm vật cản
+                const testPos = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+                if (checkCollision(testPos)) {
+                    // Nếu phát hiện đi xuyên vật cản, khôi phục lại tọa độ x và z trước khi di chuyển
+                    camera.position.x = prevPosition.x;
+                    camera.position.z = prevPosition.z;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Tự động căn chỉnh khi resize màn hình trình duyệt
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Nạp thư viện hoạt ảnh phụ trợ Tween.js để xử lý mượt mà chuyển động quay cửa
+        const tweenScript = document.createElement('script');
+        tweenScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js';
+        tweenScript.onload = () => {
+            animate();
+        };
+        document.head.appendChild(tweenScript);
+
+    </script>
 </body>
 </html>
