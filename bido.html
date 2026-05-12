@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PhET-Pro: Chuẩn độ Axit-Bazơ & Kết tủa BaSO₄ | Mô phỏng Hóa học Chính xác</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
+            background: linear-gradient(145deg, #cbdbe9 0%, #a3bbd4 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1500px;
+            width: 100%;
+            background: rgba(255, 253, 240, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 0 12px;
+        }
+        .title { font-weight: 800; font-size: 1.9rem; color: #1a3f5c; text-shadow: 2px 2px 5px #bdd4e8; }
+        .safety-tip { background: #ffecb3; border-radius: 60px; padding: 6px 20px; font-weight: bold; color: #b65500; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .grid-main { display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 24px; margin-bottom: 20px; }
+        .lab-area { background: #fef5e6; border-radius: 2rem; padding: 15px; box-shadow: inset 0 0 0 2px #fff8, 0 12px 22px rgba(0,0,0,0.15); }
+        .canvas-container { display: flex; justify-content: center; background: #f1ede0; border-radius: 28px; padding: 8px; }
+        canvas#macroCanvas { background: #fffaf0; border-radius: 28px; width: 100%; max-width: 550px; aspect-ratio: 550/370; box-shadow: 0 6px 14px rgba(0,0,0,0.2); }
+        .macro-micro-toggle { display: flex; gap: 12px; margin: 15px 0 8px; justify-content: center; }
+        .toggle-btn { background: #2c5a7a; border: none; padding: 7px 20px; border-radius: 40px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .toggle-btn.active { background: #d98c2b; box-shadow: inset 0 1px 4px #0002, 0 3px 8px #ffbc6e; }
+        .micro-view { margin-top: 12px; border-top: 2px solid #cfc5a8; padding-top: 12px; }
+        .micro-canvas { background: #0f1a1f; border-radius: 28px; width: 100%; height: 150px; display: block; box-shadow: inset 0 0 0 2px #3d5a73; }
+        .control-panel { background: #fffaf0; border-radius: 1.8rem; padding: 18px; box-shadow: 0 8px 18px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 16px; }
+        .exp-selector { display: flex; gap: 12px; background: #e3dbc9; padding: 6px 12px; border-radius: 60px; }
+        .exp-btn { flex: 1; background: #cdc2a6; border: none; border-radius: 40px; padding: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .exp-btn.active { background: #2f7d4a; color: white; box-shadow: 0 2px 8px #0002; }
+        .slider-group { background: #ede6d6; border-radius: 1.4rem; padding: 8px 15px; }
+        .slider-group label { font-weight: 700; display: flex; justify-content: space-between; }
+        input[type="range"] { width: 100%; margin: 8px 0; }
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn { background: #3a6b92; border: none; padding: 8px 16px; border-radius: 40px; color: white; font-weight: bold; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .btn-reset { background: #b95b2d; }
+        .real-time-data { background: #dce9f2; border-radius: 1.2rem; padding: 12px; text-align: center; font-weight: bold; }
+        .equation { font-family: 'Courier New', monospace; background: #2e3b2c; color: #e2f0d3; padding: 8px; border-radius: 40px; text-align: center; font-size: 0.85rem; }
+        .chart-container { background: white; border-radius: 24px; padding: 6px; }
+        .help-icon { position: fixed; bottom: 24px; right: 24px; background: #1e3b4a; color: white; border-radius: 60px; padding: 12px 18px; cursor: pointer; font-weight: bold; z-index: 99; box-shadow: 0 4px 12px black; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff5e6; max-width: 550px; padding: 25px; border-radius: 40px; }
+        @media (max-width: 880px) { .grid-main { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <div class="title"><i class="fas fa-atom"></i> Mô phỏng Chuẩn độ & Kết tủa | Cơ chế phản ứng chính xác</div>
+        <div class="safety-tip"><i class="fas fa-goggles"></i> An toàn hóa chất: Axit/Bazơ gây bỏng</div>
+    </div>
+    <div class="grid-main">
+        <div class="lab-area">
+            <div class="canvas-container">
+                <canvas id="macroCanvas" width="550" height="370"></canvas>
+            </div>
+            <div class="macro-micro-toggle">
+                <button id="toggleMacroBtn" class="toggle-btn active">🧪 Vĩ mô (Dụng cụ)</button>
+                <button id="toggleMicroBtn" class="toggle-btn">🔬 Vi mô (Chuyển động ion)</button>
+            </div>
+            <div id="microContainer" class="micro-view" style="display: none;">
+                <div style="font-size:0.75rem; text-align:center;">✨ Chuyển động Brown chậm | Tương tác ion theo nhiệt độ</div>
+                <canvas id="microCanvas" class="micro-canvas" width="550" height="150"></canvas>
+                <div id="particleLegend" style="font-size:11px; text-align:center; margin-top:5px;"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="exp-selector">
+                <button id="expTitrationBtn" class="exp-btn active">💧 Chuẩn độ (HCl + NaOH)</button>
+                <button id="expPrecipitateBtn" class="exp-btn">⚪ Kết tủa BaSO₄</button>
+            </div>
+            <div class="slider-group">
+                <label>📌 Nồng độ <span id="concLabelRef">HCl</span> : <span id="concVal">0.10</span> M</label>
+                <input type="range" id="concSlider" min="0.02" max="0.50" step="0.01" value="0.10">
+                <label>💧 Thể tích chất thêm vào: <span id="volAdded">0.0</span> mL</label>
+                <input type="range" id="volSlider" min="0" max="50" step="0.2" value="0">
+                <label>🌡️ Nhiệt độ (°C) — Ảnh hưởng tốc độ phản ứng & khuếch tán: <span id="tempVal">25</span> °C</label>
+                <input type="range" id="tempSlider" min="10" max="60" value="25" step="1">
+            </div>
+            <div class="button-group">
+                <button id="startAnimBtn" class="btn"><i class="fas fa-play"></i> Tự động chuẩn độ</button>
+                <button id="resetExpBtn" class="btn btn-reset"><i class="fas fa-sync-alt"></i> Làm lại</button>
+                <button id="exportDataBtn" class="btn"><i class="fas fa-download"></i> Xuất CSV</button>
+            </div>
+            <div class="real-time-data">
+                <div>📈 pH hiện tại: <span id="phValue">7.00</span> &nbsp;| 🧴 Chất thêm: <span id="indicatorVol">0.0</span> mL</div>
+                <div id="reactionStatus">🔹 Trạng thái: Chưa phản ứng</div>
+                <div id="pptDisplay"></div>
+                <div id="kineticInfo" style="font-size:0.75rem; color:#2c5e2e;"></div>
+            </div>
+            <div class="equation" id="chemEquation">HCl + NaOH → NaCl + H₂O  (Định luật bảo toàn)</div>
+            <div class="chart-container">
+                <canvas id="phChartCanvas" width="430" height="180" style="max-height:180px; width:100%"></canvas>
+                <div style="font-size:12px; text-align:center;">📉 Đường cong chuẩn độ pH (Thể tích NaOH mL)</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-chalkboard-teacher"></i> Cơ sở hóa học & Hướng dẫn</h3>
+        <p><strong>🔹 Chuẩn độ axit-bazơ:</strong> HCl + NaOH → NaCl + H₂O. <br> - Tại điểm tương đương: pH = 7.00. <br> - Chỉ thị phenolphthalein chuyển hồng khi pH > 8.2.<br> - <strong>Tốc độ phản ứng trung hòa</strong> tăng theo nhiệt độ (hệ số Arrhenius).</p>
+        <p><strong>🔹 Kết tủa BaSO₄:</strong> BaCl₂ + H₂SO₄ → BaSO₄↓ + 2HCl. <br> - Tích số tan rất nhỏ → kết tủa hoàn toàn.<br> - Nhiệt độ ảnh hưởng đến tốc độ hình thành mầm tinh thể.</p>
+        <p><strong>⚡ Tương tác vi mô:</strong> Các ion chuyển động Brown chậm, vận tốc tỷ lệ với √T (nhiệt độ). Khi va chạm đúng hướng, hình thành sản phẩm (kết tủa hoặc nước).</p>
+        <button id="closeModal" style="margin-top:15px; background:#2c5a7a; color:white; border:none; padding:6px 24px; border-radius:40px;">Đóng</button>
+    </div>
+</div>
+<div class="help-icon" id="helpIcon"><i class="fas fa-question-circle"></i> Giải thích cơ chế</div>
+
+<script>
+    // ================== CẤU HÌNH HÓA HỌC CHÍNH XÁC ==================
+    let currentExp = "titration";  // "titration" hoặc "precipitate"
+    let conc = 0.10;               // M (HCl hoặc BaCl2)
+    let volumeAdded = 0.0;        // mL (NaOH 0.1M hoặc H2SO4 0.1M)
+    let temperature = 25;          // °C
+    let pH = 7.0;
+    let precipitateRatio = 0.0;    // 0..1 cho kết tủa
+    
+    // Hằng số tốc độ cơ bản (ảo, dùng cho hiển thị vận tốc tương đối)
+    let kineticFactor = 1.0;
+    
+    // Dữ liệu đồ thị chuẩn độ (pH theo thể tích)
+    let titrationData = [{ vol: 0, pH: 2.0 }];
+    let phChart;
+    
+    // DOM
+    const macroCanvas = document.getElementById('macroCanvas');
+    const ctxMacro = macroCanvas.getContext('2d');
+    const microCanvas = document.getElementById('microCanvas');
+    const ctxMicro = microCanvas.getContext('2d');
+    const microContainer = document.getElementById('microContainer');
+    let microMode = false;
+    let particles = [];
+    let animationMicroId = null;
+    
+    // Hệ số Arrhenius cho vận tốc chuyển động ion (Brown chậm, nhưng tỷ lệ với sqrt(T))
+    function updateKineticFactor() {
+        // Vận tốc chuyển động nhiệt tỷ lệ sqrt(T_kelvin)
+        let Tkelvin = temperature + 273.15;
+        let refT = 298.15;
+        kineticFactor = Math.sqrt(Tkelvin / refT);
+        // Giới hạn tốc độ ion chậm rãi, dễ quan sát
+        kineticFactor = Math.min(1.5, Math.max(0.6, kineticFactor));
+        document.getElementById('kineticInfo').innerHTML = `⚡ Hệ số tốc độ phản ứng / khuếch tán: ${kineticFactor.toFixed(2)} (Tăng theo nhiệt độ)`;
+    }
+    
+    // ================== TÍNH TOÁN pH & PHẢN ỨNG CHUẨN XÁC ==================
+    function computeChemistry() {
+        updateKineticFactor();
+        if (currentExp === "titration") {
+            // Thể tích axit HCl ban đầu 25 mL
+            const volAcidL = 0.025;
+            const molesHCl_initial = conc * volAcidL;
+            const molesNaOH_added = (volumeAdded / 1000) * 0.10; // NaOH 0.1M
+            const excessMoles = molesHCl_initial - molesNaOH_added;
+            const totalVolL = 0.025 + (volumeAdded / 1000);
+            
+            if (excessMoles > 1e-9) {
+                let Hplus = excessMoles / totalVolL;
+                pH = -Math.log10(Hplus);
+                if (pH > 6.9) pH = Math.min(6.9, pH);
+            } else if (Math.abs(excessMoles) <= 1e-9) {
+                pH = 7.0;
+            } else {
+                let excessOH = -excessMoles;
+                let OHconc = excessOH / totalVolL;
+                pH = 14 + Math.log10(OHconc);
+                if (pH > 12.7) pH = 12.7;
+            }
+            // Giới hạn hiển thị
+            pH = Math.min(12.9, Math.max(1.8, pH));
+            precipitateRatio = 0;
+            document.getElementById('reactionStatus').innerHTML = `⚗️ Phản ứng trung hòa | pH = ${pH.toFixed(2)} | ${Math.abs(excessMoles) < 1e-6 ? '🎯 ĐIỂM TƯƠNG ĐƯƠNG (pH=7)' : ''}`;
+            document.getElementById('pptDisplay').innerHTML = '';
+            document.getElementById('chemEquation').innerHTML = `HCl + NaOH → NaCl + H₂O &nbsp;&nbsp; ${pH > 8.2 ? '🌸 Màu hồng (phenolphthalein)' : '💧 Không màu'}`;
+        } 
+        else {  // Kết tủa BaCl2 + H2SO4 -> BaSO4↓ (trắng) + HCl
+            const volBa_L = 0.025;
+            const molesBa = conc * volBa_L;
+            const molesSO4 = (volumeAdded / 1000) * 0.10; // H2SO4 0.1M
+            let ratio = molesSO4 / (molesBa + 1e-12);
+            precipitateRatio = Math.min(1.0, Math.max(0, ratio));
+            pH = 7.0; // gần trung tính, dung dịch chứa HCl sinh ra rất loãng
+            if (precipitateRatio >= 0.99) {
+                document.getElementById('reactionStatus').innerHTML = '🧪 Kết tủa BaSO₄ trắng hình thành hoàn toàn, lắng dưới đáy.';
+            } else {
+                document.getElementById('reactionStatus').innerHTML = `⚪ Tạo mầm kết tủa: ${(precipitateRatio*100).toFixed(1)}% BaSO₄↓ (tốc độ phụ thuộc nhiệt độ)`;
+            }
+            document.getElementById('pptDisplay').innerHTML = `🧂 Lượng kết tủa: ${(precipitateRatio*100).toFixed(0)}% &nbsp; | &nbsp; Tốc độ tạo tủa ∝ ${kineticFactor.toFixed(2)}`;
+            document.getElementById('chemEquation').innerHTML = 'BaCl₂ + H₂SO₄ → BaSO₄↓ (keo trắng) + 2HCl';
+        }
+        
+        document.getElementById('phValue').innerHTML = pH.toFixed(2);
+        document.getElementById('indicatorVol').innerHTML = volumeAdded.toFixed(1);
+        document.getElementById('concVal').innerHTML = conc.toFixed(2);
+        document.getElementById('volAdded').innerHTML = volumeAdded.toFixed(1);
+        document.getElementById('tempVal').innerHTML = temperature;
+        document.getElementById('concLabelRef').innerHTML = (currentExp === "titration") ? "HCl" : "BaCl₂";
+        
+        if (currentExp === "titration") updateTitrationGraph();
+        drawMacroScene();
+        if (microMode) refreshParticlesByExp();  // Tái tạo hạt theo nhiệt độ
+    }
+    
+    function updateTitrationGraph() {
+        if (currentExp !== "titration") return;
+        let exists = titrationData.find(p => Math.abs(p.vol - volumeAdded) < 0.15);
+        if (!exists) {
+            titrationData.push({ vol: volumeAdded, pH: pH });
+            titrationData.sort((a,b) => a.vol - b.vol);
+        } else {
+            exists.pH = pH;
+        }
+        let filtered = titrationData.filter(p => p.vol <= 50);
+        if (phChart) {
+            phChart.data.datasets[0].data = filtered.map(p => ({ x: p.vol, y: p.pH }));
+            phChart.update('none');
+        }
+    }
+    
+    function resetExperiment() {
+        volumeAdded = 0.0;
+        precipitateRatio = 0.0;
+        document.getElementById('volSlider').value = "0";
+        if (currentExp === "titration") {
+            titrationData = [{ vol: 0, pH: 2.0 }];
+            if (phChart) {
+                phChart.data.datasets[0].data = [{ x: 0, y: 2.0 }];
+                phChart.update();
+            }
+        }
+        computeChemistry();
+        if (microMode) refreshParticlesByExp();
+    }
+    
+    // ================== VẼ MACRO: BECHR, BURET, HIỆU ỨNG KẾT TỦA ==================
+    function drawMacroScene() {
+        ctxMacro.clearRect(0, 0, 550, 370);
+        ctxMacro.save();
+        ctxMacro.shadowBlur = 3;
+        ctxMacro.fillStyle = "#ece3d0";
+        ctxMacro.beginPath();
+        ctxMacro.roundRect(140, 105, 250, 200, 28);
+        ctxMacro.fill();
+        ctxMacro.fillStyle = "#cfc6aa";
+        ctxMacro.beginPath();
+        ctxMacro.roundRect(138, 103, 254, 204, 30);
+        ctxMacro.fill();
+        
+        // Mực chất lỏng (thay đổi theo thể tích thêm)
+        let liquidHeight = 140 + (currentExp === "titration" ? Math.min(40, volumeAdded * 0.6) : precipitateRatio * 45);
+        liquidHeight = Math.min(250, Math.max(130, liquidHeight));
+        let liquidColor = (currentExp === "titration" && pH > 8.2) ? "#ffb7c5" : "#a7d0e6";
+        ctxMacro.fillStyle = liquidColor;
+        ctxMacro.beginPath();
+        ctxMacro.roundRect(148, liquidHeight, 234, 250 - liquidHeight + 10, 15);
+        ctxMacro.fill();
+        
+        // Kết tủa trắng (BaSO4)
+        if (currentExp === "precipitate" && precipitateRatio > 0.02) {
+            let density = 0.3 + precipitateRatio * 0.8;
+            for (let i = 0; i < 35 + precipitateRatio * 65; i++) {
+                ctxMacro.fillStyle = `rgba(250, 250, 245, ${0.5 + precipitateRatio * 0.4})`;
+                ctxMacro.beginPath();
+                ctxMacro.arc(190 + Math.random() * 160, 260 + Math.random() * 50, 2 + Math.random() * 6, 0, Math.PI*2);
+                ctxMacro.fill();
+                ctxMacro.fillStyle = "#fffff0";
+                ctxMacro.beginPath();
+                ctxMacro.rect(200 + Math.random() * 140, 275 + Math.random() * 40, 3, 2+Math.random()*5);
+                ctxMacro.fill();
+            }
+        }
+        
+        // Buret
+        ctxMacro.fillStyle = "#b0bec5";
+        ctxMacro.beginPath();
+        ctxMacro.roundRect(440, 55, 34, 235, 20);
+        ctxMacro.fill();
+        ctxMacro.fillStyle = "#5d6d7e";
+        ctxMacro.fillRect(444, 55, 26, 14);
+        ctxMacro.fillStyle = "#9bc49b";
+        ctxMacro.fillRect(444, 55 + (225 * (1 - volumeAdded / 50)), 26, 225 * (volumeAdded / 50));
+        ctxMacro.fillStyle = "#2c3e2b";
+        ctxMacro.font = "bold 11px monospace";
+        ctxMacro.fillText(currentExp === "titration" ? "NaOH 0.1M" : "H₂SO₄ 0.1M", 430, 48);
+        
+        if (currentExp === "titration" && pH > 8.2) {
+            ctxMacro.fillStyle = "#d63384";
+            ctxMacro.font = "italic 14px";
+            ctxMacro.fillText("🌸 Hồng (phenolphthalein)", 170, 340);
+        }
+        ctxMacro.restore();
+        ctxMacro.font = "bold 12px system-ui";
+        ctxMacro.fillStyle = "#1e3b3b";
+        ctxMacro.fillText(currentExp === "titration" ? "Dung dịch HCl + chỉ thị pH" : "BaCl₂ + H₂SO₄ → BaSO₄↓", 165, 92);
+    }
+    
+    // ================== VI MÔ: ION CHUYỂN ĐỘNG BROWN CHẬM, TỶ LỆ VỚI NHIỆT ĐỘ ==================
+    class Particle {
+        constructor(x, y, type, size=3.2) {
+            this.x = x; this.y = y;
+            // Vận tốc cơ bản chậm, nhân với kineticFactor (nhiệt độ)
+            let baseSpeed = 0.35;
+            this.vx = (Math.random() - 0.5) * baseSpeed * kineticFactor;
+            this.vy = (Math.random() - 0.5) * baseSpeed * kineticFactor;
+            this.type = type;
+            this.size = size;
+        }
+    }
+    
+    function refreshParticlesByExp() {
+        particles = [];
+        const w = 550, h = 150;
+        if (currentExp === "titration") {
+            // Dựa vào pH ước tính số lượng H+ và OH-
+            let hCount = Math.floor(32 * Math.max(0.05, Math.min(1.2, (3.2 - Math.min(3.2, pH)) / 2.2)));
+            let ohCount = Math.floor(28 * Math.max(0, (pH - 6.8) / 3.8));
+            for (let i = 0; i < 55; i++) {
+                let type = "Cl⁻";
+                if (i < hCount) type = "H⁺";
+                else if (i < hCount + ohCount) type = "OH⁻";
+                else if (i % 3 === 0) type = "Na⁺";
+                else type = "Cl⁻";
+                particles.push(new Particle(20 + Math.random() * (w-40), 10 + Math.random() * (h-25), type, 3.2));
+            }
+        } else {
+            // Kết tủa: Ba²⁺ , SO₄²⁻ , và sản phẩm kết tủa
+            let baCount = Math.floor(36 * (1 - precipitateRatio));
+            let so4Count = Math.floor(34 * (1 - precipitateRatio));
+            for (let i = 0; i < 55; i++) {
+                let type = "Cl⁻";
+                if (i < baCount) type = "Ba²⁺";
+                else if (i < baCount + so4Count) type = "SO₄²⁻";
+                else type = "Cl⁻";
+                particles.push(new Particle(20 + Math.random() * (w-40), 10 + Math.random() * (h-25), type, 3.4));
+            }
+            let pptCount = Math.floor(precipitateRatio * 32);
+            for (let i = 0; i < pptCount; i++) {
+                let p = new Particle(20 + Math.random() * (w-40), 30 + Math.random() * (h-40), "BaSO₄↓", 5.5);
+                p.vx *= 0.2; p.vy *= 0.2;  // kết tủa chậm, lắng
+                particles.push(p);
+            }
+        }
+        drawMicroCanvas();
+    }
+    
+    function drawMicroCanvas() {
+        if (!microMode) return;
+        ctxMicro.clearRect(0, 0, 550, 150);
+        ctxMicro.fillStyle = "#0d1c26";
+        ctxMicro.fillRect(0, 0, 550, 150);
+        for (let p of particles) {
+            if (p.type === "H⁺") ctxMicro.fillStyle = "#ff8a8a";
+            else if (p.type === "OH⁻") ctxMicro.fillStyle = "#66d9ff";
+            else if (p.type === "Na⁺") ctxMicro.fillStyle = "#76c7f0";
+            else if (p.type === "Cl⁻") ctxMicro.fillStyle = "#afe77a";
+            else if (p.type === "Ba²⁺") ctxMicro.fillStyle = "#f7bc45";
+            else if (p.type === "SO₄²⁻") ctxMicro.fillStyle = "#f29b9b";
+            else if (p.type === "BaSO₄↓") ctxMicro.fillStyle = "#e5e9ed";
+            else ctxMicro.fillStyle = "#bbd4f0";
+            ctxMicro.beginPath();
+            ctxMicro.arc(p.x, p.y, p.size - 1.6, 0, Math.PI*2);
+            ctxMicro.fill();
+            ctxMicro.fillStyle = "#fffbe3";
+            ctxMicro.font = "bold 10px 'Segoe UI'";
+            ctxMicro.fillText(p.type, p.x-8, p.y-5);
+        }
+        let legend = currentExp === "titration" ? "🔴 H⁺  🔵 OH⁻  🟢 Na⁺/Cl⁻" : "🟡 Ba²⁺  🟠 SO₄²⁻  ⚪ BaSO₄↓ (kết tủa)";
+        document.getElementById('particleLegend').innerHTML = legend + ` &nbsp; | &nbsp; 🌡️ Tốc độ ion ∝ √T → hệ số ${kineticFactor.toFixed(2)}`;
+    }
+    
+    function updateMicroBrownian() {
+        if (!microMode) return;
+        // Cập nhật vận tốc theo kineticFactor động (nếu nhiệt độ thay đổi, cập nhật lại vận tốc các hạt)
+        for (let p of particles) {
+            // Mô phỏng chuyển động Brown, vận tốc hiện tại đã được nhân kineticFactor khi tạo, nhưng để đáp ứng nhiệt độ thay đổi liên tục:
+            // Nếu nhiệt độ thay đổi quá lớn, cập nhật nhẹ vận tốc.
+            let targetVx = (Math.random() - 0.5) * 0.28 * kineticFactor;
+            let targetVy = (Math.random() - 0.5) * 0.28 * kineticFactor;
+            p.vx = p.vx * 0.96 + targetVx * 0.04;
+            p.vy = p.vy * 0.96 + targetVy * 0.04;
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 8) p.x = 8, p.vx *= -0.9;
+            if (p.x > 542) p.x = 542, p.vx *= -0.9;
+            if (p.y < 8) p.y = 8, p.vy *= -0.9;
+            if (p.y > 140) p.y = 140, p.vy *= -0.9;
+        }
+        drawMicroCanvas();
+        requestAnimationFrame(updateMicroBrownian);
+    }
+    
+    // Tự động chuẩn độ (chạy từ từ, dừng khi đạt 50mL)
+    let autoInterval = null;
+    function startAutoTitration() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(() => {
+            let newVol = parseFloat(document.getElementById('volSlider').value) + 0.6;
+            if (newVol >= 50) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+                newVol = 50;
+            }
+            document.getElementById('volSlider').value = newVol;
+            volumeAdded = newVol;
+            computeChemistry();
+            if (microMode) refreshParticlesByExp();
+        }, 65);
+    }
+    
+    // ================== KHỞI TẠO & SỰ KIỆN ==================
+    function initChart() {
+        const ctx = document.getElementById('phChartCanvas').getContext('2d');
+        phChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'pH theo thể tích NaOH (mL) - đường cong chuẩn độ',
+                    data: [{ x: 0, y: 2.0 }],
+                    borderColor: '#c23b22',
+                    backgroundColor: 'rgba(194,59,34,0.05)',
+                    borderWidth: 3,
+                    pointRadius: 2.5,
+                    pointBackgroundColor: '#f39c12',
+                    tension: 0.25,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    x: { title: { display: true, text: 'Thể tích NaOH (mL)', color: '#2c3e50' }, min: 0, max: 52 },
+                    y: { title: { display: true, text: 'pH' }, min: 1, max: 13 }
+                },
+                plugins: { tooltip: { callbacks: { label: (ctx) => `pH: ${ctx.parsed.y.toFixed(2)}` } } }
+            }
+        });
+    }
+    
+    // Event listeners
+    document.getElementById('concSlider').addEventListener('input', (e) => { conc = parseFloat(e.target.value); resetExperiment(); });
+    document.getElementById('volSlider').addEventListener('input', (e) => { if(autoInterval){clearInterval(autoInterval); autoInterval=null;} volumeAdded = parseFloat(e.target.value); computeChemistry(); if(microMode) refreshParticlesByExp(); });
+    document.getElementById('tempSlider').addEventListener('input', (e) => { temperature = parseInt(e.target.value); computeChemistry(); if(microMode) refreshParticlesByExp(); });
+    document.getElementById('resetExpBtn').addEventListener('click', resetExperiment);
+    document.getElementById('startAnimBtn').addEventListener('click', startAutoTitration);
+    document.getElementById('exportDataBtn').addEventListener('click', () => { alert(`📊 Xuất dữ liệu:\nPhản ứng: ${currentExp}\npH: ${pH.toFixed(2)}\nThể tích: ${volumeAdded} mL\nKết tủa: ${(precipitateRatio*100).toFixed(1)}%\nNhiệt độ: ${temperature}°C\nHệ số Arrhenius: ${kineticFactor.toFixed(3)}`); });
+    document.getElementById('expTitrationBtn').addEventListener('click', () => { currentExp = "titration"; document.getElementById('expTitrationBtn').classList.add('active'); document.getElementById('expPrecipitateBtn').classList.remove('active'); resetExperiment(); if(microMode) refreshParticlesByExp(); });
+    document.getElementById('expPrecipitateBtn').addEventListener('click', () => { currentExp = "precipitate"; document.getElementById('expPrecipitateBtn').classList.add('active'); document.getElementById('expTitrationBtn').classList.remove('active'); resetExperiment(); if(microMode) refreshParticlesByExp(); });
+    document.getElementById('toggleMacroBtn').addEventListener('click', () => { microMode = false; microContainer.style.display = 'none'; drawMacroScene(); });
+    document.getElementById('toggleMicroBtn').addEventListener('click', () => { microMode = true; microContainer.style.display = 'block'; refreshParticlesByExp(); if(!animationMicroId){ animationMicroId = requestAnimationFrame(function tick(){ updateMicroBrownian(); animationMicroId = requestAnimationFrame(tick); }); } drawMacroScene(); });
+    document.getElementById('helpIcon').addEventListener('click', () => { document.getElementById('helpModal').style.display = 'flex'; });
+    document.getElementById('closeModal').addEventListener('click', () => { document.getElementById('helpModal').style.display = 'none'; });
+    window.addEventListener('click', (e) => { if(e.target === document.getElementById('helpModal')) document.getElementById('helpModal').style.display = 'none'; });
+    
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2*r) r = w/2; if (h < 2*r) r = h/2;
+            this.moveTo(x+r, y);
+            this.lineTo(x+w-r, y);
+            this.quadraticCurveTo(x+w, y, x+w, y+r);
+            this.lineTo(x+w, y+h-r);
+            this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+            this.lineTo(x+r, y+h);
+            this.quadraticCurveTo(x, y+h, x, y+h-r);
+            this.lineTo(x, y+r);
+            this.quadraticCurveTo(x, y, x+r, y);
+            return this;
+        };
+    }
+    
+    initChart();
+    resetExperiment();
+    drawMacroScene();
+</script>
+</body>
+</html>
