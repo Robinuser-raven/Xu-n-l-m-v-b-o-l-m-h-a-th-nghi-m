@@ -2,614 +2,1074 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title> Bảo và Lâm  | HTML/CSS Hóa học thực tế ảo</title>
-    <!-- Google Fonts và Font Awesome 6 (miễn phí) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thí Nghiệm Hóa Học Ảo Hoàn Chỉnh - PhET Chemistry Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-color: #0b0c10;
+            --panel-color: #1f2833;
+            --panel-dark: #151a22;
+            --accent-color: #45f3ff;
+            --text-color: #c5c6c7;
+            --text-light: #ffffff;
+            --border-color: #2f3e46;
+            --success-color: #00e676;
+            --danger-color: #ff1744;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #f8fafc 0%, #eef2f6 100%);
-            color: #0a1a2f;
-            line-height: 1.5;
-            scroll-behavior: smooth;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+            user-select: none;
         }
 
-        /* container tiện ích */
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 24px;
+        /* --- Bố cục phân vùng Giao diện --- */
+        #sidebar-left {
+            width: 280px;
+            background: var(--panel-color);
+            border-right: 2px solid var(--border-color);
+            padding: 20px 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
         }
 
-        /* Header & Navigation */
-        .navbar {
-            background: rgba(10, 26, 47, 0.85);
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        #main-lab {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at center, #1a2332 0%, #080c11 100%);
         }
 
-        .nav-container {
+        #sidebar-right {
+            width: 340px;
+            background: var(--panel-color);
+            border-left: 2px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        /* --- Các thành phần UI bên trái (Danh sách chất) --- */
+        h3 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
+        }
+
+        .chem-group {
+            margin-bottom: 22px;
+            background: var(--panel-dark);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .group-label {
+            font-weight: bold;
+            color: #8da2bb;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            display: block;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 8px;
+        }
+        
+        .chem-item {
+            background: #252e3d;
+            padding: 12px 15px;
+            margin: 6px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            color: var(--text-light);
+            font-weight: 500;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
+        }
+        .chem-item:hover {
+            background: #344256;
+            transform: translateX(6px);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(69,243,255,0.2);
+        }
+        .chem-item.active {
+            background: #1b4d4f;
+            border-color: #00ffcc;
+            color: #00ffcc;
+            box-shadow: 0 0 12px rgba(0,255,204,0.3);
+        }
+        .chem-formula {
+            font-size: 0.9em;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #45f3ff;
         }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #FFFFFF, #b9e0ff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .logo i {
-            background: none;
-            -webkit-background-clip: unset;
-            color: #7ac7ff;
-            margin-right: 6px;
-        }
-
-        .nav-links {
+        /* --- Khu vực Cốc nghiệm chính giữa --- */
+        #beaker-container {
+            flex-grow: 1;
             display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: #f1f5f9;
-            font-weight: 500;
-            transition: 0.3s;
-            font-size: 1rem;
-        }
-
-        .nav-links a:hover {
-            color: #7ac7ff;
-            transform: translateY(-2px);
-        }
-
-        /* Hero section */
-        .hero {
-            padding: 5rem 0 4rem 0;
-            text-align: center;
-            background: radial-gradient(circle at 10% 30%, rgba(255,255,255,0.5) 0%, rgba(226, 240, 255, 0.2) 100%);
-        }
-
-        .hero h1 {
-            font-size: 3.2rem;
-            font-weight: 800;
-            background: linear-gradient(130deg, #0b2b44, #1e4a76, #0f2c44);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 1rem;
-        }
-
-        .hero .highlight {
-            background: linear-gradient(120deg, #2563eb, #38bdf8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            max-width: 700px;
-            margin: 1rem auto;
-            color: #1e293b;
-        }
-
-        .btn-group {
-            margin-top: 2rem;
-            display: flex;
-            gap: 1rem;
             justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.8rem 2rem;
-            border-radius: 40px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.25s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: #1e3a5f;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 40, 70, 0.2);
-        }
-
-        .btn-primary:hover {
-            background: #0f2c44;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #1e3a5f;
-            color: #1e3a5f;
-        }
-
-        .btn-outline:hover {
-            background: #1e3a5f;
-            color: white;
-            transform: translateY(-3px);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 0;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 3rem;
+            align-items: center;
             position: relative;
         }
 
-        .section-title:after {
-            content: '';
-            display: block;
-            width: 70px;
-            height: 4px;
-            background: linear-gradient(90deg, #2563eb, #7ac7ff);
-            margin: 0.8rem auto 0;
-            border-radius: 4px;
+        #beaker-wrapper {
+            position: relative;
+            width: 300px;
+            height: 380px;
         }
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-
-        .card {
-            background: white;
-            border-radius: 28px;
-            padding: 2rem 1.5rem;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.5);
-            backdrop-filter: blur(2px);
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 30px 40px -15px rgba(0, 0, 0, 0.2);
-        }
-
-        .card i {
-            font-size: 2.8rem;
-            color: #2563eb;
-            margin-bottom: 1.2rem;
-        }
-
-        .card h3 {
-            font-size: 1.6rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .card p {
-            color: #334155;
-        }
-
-        /* Gallery / Portfolio */
-        .gallery {
-            background: #ffffffd9;
-            padding: 5rem 0;
-            border-radius: 48px 48px 0 0;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.8rem;
-            margin-top: 1rem;
-        }
-
-        .gallery-item {
-            background: #f1f5f9;
-            border-radius: 24px;
-            overflow: hidden;
-            transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            cursor: pointer;
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.02);
-            box-shadow: 0 20px 30px rgba(0,0,0,0.1);
-        }
-
-        .gallery-img {
-            background: linear-gradient(145deg, #cbd5e1, #94a3b8);
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
-        }
-
-        .gallery-info {
-            padding: 1.2rem;
-        }
-
-        .gallery-info h4 {
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-        }
-
-        /* Contact form */
-        .contact {
-            padding: 5rem 0;
-            background: linear-gradient(115deg, #eef2ff 0%, #ffffff 100%);
-        }
-
-        .contact-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            background: white;
-            border-radius: 48px;
-            padding: 2rem;
-            box-shadow: 0 25px 40px -15px rgba(0,0,0,0.1);
-        }
-
-        .contact-info {
-            flex: 1;
-            min-width: 220px;
-        }
-
-        .contact-info h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .contact-detail {
-            margin: 1.5rem 0;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .contact-detail i {
-            font-size: 1.4rem;
-            color: #2563eb;
-            width: 32px;
-        }
-
-        .contact-form {
-            flex: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        input, textarea {
+        canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
             width: 100%;
-            padding: 0.9rem 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 28px;
-            font-family: inherit;
-            transition: 0.2s;
-            background: #fefefe;
+            height: 100%;
+        }
+        #canvas-liquid { z-index: 1; }
+        #canvas-particles { z-index: 2; }
+        #beaker-svg { z-index: 3; pointer-events: none; }
+
+        /* Cửa sổ hiển thị Vi mô (Microscopic View) */
+        #micro-view {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            width: 190px;
+            height: 190px;
+            border: 4px solid #344256;
+            border-radius: 50%;
+            background: rgba(5, 10, 15, 0.95);
+            box-shadow: 0 0 25px rgba(0,0,0,0.8), inset 0 0 20px rgba(69,243,255,0.15);
+            overflow: hidden;
+            z-index: 5;
+        }
+        #micro-title {
+            position: absolute;
+            top: 220px;
+            right: 75px;
+            font-size: 0.8em;
+            color: #8da2bb;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 5;
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
-        }
-
-        button[type="submit"] {
-            background: #1e3a5f;
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        button[type="submit"]:hover {
-            background: #0f2c44;
-            transform: scale(0.98);
-        }
-
-        /* Footer */
-        footer {
-            background: #0a1a2f;
-            color: #cbd5e6;
-            padding: 2rem 0;
+        /* Bảng hiển thị phương trình động */
+        #equation-display {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(11, 12, 16, 0.9);
+            padding: 14px 35px;
+            border-radius: 30px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--text-light);
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            z-index: 10;
             text-align: center;
+            min-width: 400px;
+            transition: all 0.3s ease;
+        }
+        #equation-display.reacting {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(69,243,255,0.4);
         }
 
-        .social-icons a {
-            color: #cbd5e6;
-            margin: 0 12px;
-            font-size: 1.4rem;
-            transition: 0.2s;
-            display: inline-block;
+        /* --- Bảng thông số thời gian thực (Bottom Panel) --- */
+        #info-panel {
+            height: 170px;
+            background: var(--panel-dark);
+            border-top: 2px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            gap: 25px;
+            align-items: center;
         }
 
-        .social-icons a:hover {
-            color: #7ac7ff;
-            transform: translateY(-3px);
+        .display-card {
+            background: #1f2833;
+            padding: 15px;
+            border-radius: 12px;
+            min-width: 120px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .card-title {
+            font-size: 0.8em;
+            color: #8da2bb;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        .value { font-size: 2.2em; font-weight: bold; color: var(--accent-color); font-family: monospace; }
+
+        /* --- Bảng điều khiển tham số ở bên phải --- */
+        .control-group {
+            margin-bottom: 22px;
+            background: var(--panel-dark);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            color: #8da2bb;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            height: 6px;
+            background: #252e3d;
+            border-radius: 3px;
+            outline: none;
+            accent-color: var(--accent-color);
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            background: #252e3d;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+        select:focus {
+            border-color: var(--accent-color);
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #00c853 0%, #00b0ff 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,200,83,0.3);
+        }
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,200,83,0.5);
+        }
+        .btn-reset {
+            background: #252e3d;
+            color: #ff5252;
+            border: 1px solid rgba(255,82,82,0.3);
+            margin-top: auto;
+        }
+        .btn-reset:hover {
+            background: #ff5252;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,82,82,0.4);
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-container {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .hero h1 {
-                font-size: 2.2rem;
-            }
-            .section-title {
-                font-size: 1.8rem;
-            }
-            .contact-wrapper {
-                flex-direction: column;
-            }
+        #phenomenon-box {
+            margin-top: 15px;
+            background: #11161d;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--border-color);
+            min-height: 80px;
         }
-
-        /* Animation nhẹ khi cuộn */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-
-        .fade-up.appear {
-            opacity: 1;
-            transform: translateY(0);
+        #phenomenon {
+            margin: 0;
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #cbd5e1;
         }
     </style>
 </head>
 <body>
 
-<header class="navbar">
-    <div class="container nav-container">
-        <div class="logo">
-            <i class="fas fa-code"></i> WebCraft
+<div id="sidebar-left">
+    <h3>Hóa Chất (1M)</h3>
+    
+    <div class="chem-group">
+        <span class="group-label">Nhóm Axit</span>
+        <div class="chem-item" onclick="selectChemical('HCl', this)">
+            <span>Axit clohiđric</span> <span class="chem-formula">HCl</span>
         </div>
-        <ul class="nav-links">
-            <li><a href="#home">Trang chủ</a></li>
-            <li><a href="#features">Tính năng</a></li>
-            <li><a href="#gallery">Dự án</a></li>
-            <li><a href="#contact">Liên hệ</a></li>
-        </ul>
+        <div class="chem-item" onclick="selectChemical('H2SO4', this)">
+            <span>Axit sunfuric</span> <span class="chem-formula">H2SO4</span>
+        </div>
     </div>
-</header>
-
-<main>
-    <!-- Hero section -->
-    <section id="home" class="hero">
-        <div class="container">
-            <h1>Xây dựng <span class="highlight">trải nghiệm số</span> <br> tư  & sáng tạo</h1>
-            <p>Thiết kế web hiện đại hóa học, giao diện tinh tế và tối ưu chuyển đổi. Đưa môn học của bạn lên một tầm cao mới.</p>
-            <div class="btn-group">
-                <a href="#contact" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Bắt đầu ngay</a>
-                <a href="#features" class="btn btn-outline"><i class="fas fa-caret-right"></i> Khám phá</a>
-            </div>
+    
+    <div class="chem-group">
+        <span class="group-label">Nhóm Bazơ</span>
+        <div class="chem-item" onclick="selectChemical('NaOH', this)">
+            <span>Natri hiđroxit</span> <span class="chem-formula">NaOH</span>
         </div>
-    </section>
-
-    <!-- Features section -->
-    <section id="features" class="features">
-        <div class="container">
-            <h2 class="section-title">Giá trị cốt lõi</h2>
-            <div class="cards">
-                <div class="card fade-up">
-                    <i class="fas fa-bolt"></i>
-                    <h3>Tối ưu tốc độ</h3>
-                    <p>Hiệu suất vượt trội, tải trang nhanh chóng, nâng cao trải nghiệm người dùng và thực nghiệm LAB ảo.</p>
-                </div>
-                <div class="card fade-up">
-                    <i class="fas fa-mobile-alt"></i>
-                    <h3>Responsive hoàn hảo</h3>
-                    <p>Giao diện thích ứng mọi thiết bị từ điện thoại, tablet đến màn hình lớn.</p>
-                </div>
-                <div class="card fade-up">
-                    <i class="fas fa-palette"></i>
-                    <h3>Thiết kế hiện đại</h3>
-                    <p>Xu hướng mới nhất, màu sắc hài hòa, tạo ấn tượng mạnh mẽ với người dùng mô phỏng chân thực nhất.</p>
-                </div>
-            </div>
+        <div class="chem-item" onclick="selectChemical('Ba(OH)2', this)">
+            <span>Bari hiđroxit</span> <span class="chem-formula">Ba(OH)2</span>
         </div>
-    </section>
-
-  
-    <!-- Gallery / Portfolio -->
-    <section id="gallery" class="gallery">
-        <div class="container">
-            <h2 class="section-title">Dự án tiêu biểu</h2>
-            <div class="gallery-grid">
-                <div class="gallery-item fade-up">
-                    <div href ="3dpro.html" class="gallery-img"><i class="fas fa-laptop-code" style="font-size: 4rem;"></i></div>
-                    <div class="gallery-info">
-                        <h4>Môi trường 3D</h4>
-                        <p>Trực quan và sinh động</p>
-                    </div>
-                </div>
-                <div class="gallery-item fade-up">
-                    <div href = "bido.html" class="gallery-img"><i class="fas fa-chart-line" style="font-size: 4rem;"></i></div>
-                    <div class="gallery-info">
-                        <h4>Môi trường biểu đồ </h4>
-                        <p>Trực quan hóa dữ liệu thông minh</p>
-                    </div>
-                </div>
-                <div href ="nb.html"  class="gallery-item fade-up">
-                    <div class="gallery-img"><i class="fas fa-gem" style="font-size: 4rem;"></i></div>
-                    <div class="gallery-info">
-                         <h4>Phản ứng nhận biết</h4>
-                        <p>Phong phú và thuận lợi</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact section với form tương tác -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <div class="contact-wrapper">
-                <div class="contact-info">
-                    <h3><i class="fas fa-comment-dots"></i> Kết nối ngay</h3>
-                    <p>Hãy để lại thông tin, chúng tôi sẽ liên hệ trong vòng 24h. Cùng kiến tạo giải pháp web vượt trội.</p>
-                    <div class="contact-detail">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Bảo Lộc, Việt Nam</span>
-                    </div>
-                    <div class="contact-detail">
-                        <i class="fas fa-envelope"></i>
-                        <span>hello@webcraft.vn</span>
-                    </div>
-                    <div class="contact-detail">
-                        <i class="fas fa-phone-alt"></i>
-                        <span>+84 912 345 678</span>
-                    </div>
-                </div>
-                <div class="contact-form">
-                    <form id="contactForm" action="#" method="post">
-                        <div class="form-group">
-                            <input type="text" id="name" name="name" placeholder="Họ và tên *" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" id="email" name="email" placeholder="Địa chỉ email *" required>
-                        </div>
-                        <div class="form-group">
-                            <textarea id="message" rows="4" placeholder="Nội dung dự án hoặc câu hỏi của bạn..."></textarea>
-                        </div>
-                        <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Gửi yêu cầu</button>
-                        <p id="formFeedback" style="margin-top: 12px; font-size: 0.9rem;"></p>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
-</main>
-
-<footer>
-    <div class="container">
-        <div class="social-icons">
-            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" aria-label="Github"><i class="fab fa-github"></i></a>
-        </div>
-        <p style="margin-top: 1.2rem;">&copy; 2026 WebCraft. Mọi quyền được bảo lưu. Thiết kế bởi tình yêu & code.</p>
     </div>
-</footer>
+    
+    <div class="chem-group">
+        <span class="group-label">Muối trung hòa</span>
+        <div class="chem-item" onclick="selectChemical('Na2CO3', this)">
+            <span>Natri cacbonat</span> <span class="chem-formula">Na2CO3</span>
+        </div>
+        <div class="chem-item" onclick="selectChemical('CuSO4', this)">
+            <span>Đồng(II) sunfat</span> <span class="chem-formula">CuSO4</span>
+        </div>
+        <div class="chem-item" onclick="selectChemical('AgNO3', this)">
+            <span>Bạc nitrat</span> <span class="chem-formula">AgNO3</span>
+        </div>
+    </div>
+    
+    <div class="chem-group">
+        <span class="group-label">Muối Axit</span>
+        <div class="chem-item" onclick="selectChemical('NaHCO3', this)">
+            <span>Natri hiđrocacbonat</span> <span class="chem-formula">NaHCO3</span>
+        </div>
+    </div>
+</div>
 
-<!-- JavaScript tạo hiệu ứng và xử lý form đơn giản (demo) -->
-<script>
-    (function() {
-        // Hiệu ứng Fade-up khi cuộn: thêm class 'appear' khi phần tử vào viewport
-        const fadeElements = document.querySelectorAll('.fade-up');
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('appear');
-                    observer.unobserve(entry.target); // chỉ chạy 1 lần
-                }
-            });
-        }, { threshold: 0.2, rootMargin: "0px 0px -20px 0px" });
-        
-        fadeElements.forEach(el => observer.observe(el));
-        
-        // Thủ công thêm appear ngay lập tức nếu đã trong viewport lúc tải: có thể gọi kiểm tra
-        window.addEventListener('load', () => {
-            fadeElements.forEach(el => {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 100) {
-                    el.classList.add('appear');
-                    observer.unobserve(el);
-                }
-            });
-        });
-        
-        // Xử lý form liên hệ (demo - hiển thị thông báo, không gửi thực tế)
-        const form = document.getElementById('contactForm');
-        const feedback = document.getElementById('formFeedback');
-        
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const msgInput = document.getElementById('message');
+<div id="main-lab">
+    <div id="beaker-container">
+        <div id="beaker-wrapper">
+            <canvas id="canvas-liquid" width="300" height="380"></canvas>
+            <canvas id="canvas-particles" width="300" height="380"></canvas>
             
-            let isValid = true;
-            if (!nameInput.value.trim()) {
-                feedback.innerHTML = '<span style="color:#d9534f;">✖ Vui lòng nhập họ tên.</span>';
-                nameInput.style.borderColor = '#d9534f';
-                isValid = false;
-            } else if (!emailInput.value.trim() || !emailInput.value.includes('@')) {
-                feedback.innerHTML = '<span style="color:#d9534f;">✖ Email không hợp lệ.</span>';
-                emailInput.style.borderColor = '#d9534f';
-                isValid = false;
+            <svg id="beaker-svg" width="300" height="380" viewBox="0 0 300 380">
+                <defs>
+                    <linearGradient id="beaker-glass" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#ffffff; stop-opacity:0.18" />
+                        <stop offset="12%" style="stop-color:#ffffff; stop-opacity:0.03" />
+                        <stop offset="88%" style="stop-color:#ffffff; stop-opacity:0.03" />
+                        <stop offset="100%" style="stop-color:#ffffff; stop-opacity:0.28" />
+                    </linearGradient>
+                </defs>
+                
+                <path d="M 50 40 
+                         L 50 25 
+                         Q 35 25 28 40 
+                         L 42 48 
+                         L 50 48 
+                         L 50 330 
+                         Q 50 355 75 355 
+                         L 225 355 
+                         Q 250 355 250 330 
+                         L 250 40 
+                         Z" 
+                      fill="url(#beaker-glass)" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" />
+                      
+                <g stroke="rgba(255,255,255,0.45)" stroke-width="1.5">
+                    <line x1="50" y1="290" x2="85" y2="290" /> <text x="95" y="294" fill="#a4b3c6" font-size="11" font-weight="bold">50 mL</text>
+                    <line x1="50" y1="230" x2="85" y2="230" /> <text x="95" y="234" fill="#a4b3c6" font-size="11" font-weight="bold">100 mL</text>
+                    <line x1="50" y1="170" x2="85" y2="170" /> <text x="95" y="174" fill="#a4b3c6" font-size="11" font-weight="bold">150 mL</text>
+                    <line x1="50" y1="110" x2="85" y2="110" /> <text x="95" y="114" fill="#a4b3c6" font-size="11" font-weight="bold">200 mL</text>
+                    <line x1="50" y1="50" x2="85" y2="50" />   <text x="95" y="54" fill="#a4b3c6" font-size="11" font-weight="bold">250 mL</text>
+                </g>
+            </svg>
+        </div>
+
+        <div id="micro-view">
+            <canvas id="canvas-micro" width="190" height="190"></canvas>
+        </div>
+        <div id="micro-title">Kính vi mô (Ions)</div>
+
+        <div id="equation-display">Cốc nghiệm hiện tại đang trống</div>
+    </div>
+
+    <div id="info-panel">
+        <div class="display-card">
+            <div class="card-title">Độ pH</div>
+            <div id="ph-val" class="value">7.0</div>
+        </div>
+        <div class="display-card">
+            <div class="card-title">Thể tích</div>
+            <div id="vol-val" class="value">0 mL</div>
+        </div>
+        <div class="display-card">
+            <div class="card-title">Nhiệt độ</div>
+            <div id="temp-val" class="value">25°C</div>
+        </div>
+        <div style="flex-grow: 1; height: 140px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px;">
+            <canvas id="phChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div id="sidebar-right">
+    <h3>Bảng Điều Khiển</h3>
+    
+    <div class="control-group">
+        <label>Chất phản ứng đang chọn:</label>
+        <div id="selected-display" style="font-size: 1.2em; font-weight: bold; color: var(--accent-color); text-align: center; padding: 5px 0;">CHƯA CHỌN CHẤT</div>
+    </div>
+    
+    <div class="control-group">
+        <label>Thể tích dung dịch nạp thêm: <span id="vol-label" style="color: var(--accent-color); font-weight: bold;">25</span> mL</label>
+        <input type="range" id="vol-slider" min="5" max="100" value="25" step="5" oninput="document.getElementById('vol-label').innerText = this.value">
+    </div>
+    
+    <div class="control-group">
+        <label>Thuốc thử chất chỉ thị màu:</label>
+        <select id="indicator-select" onchange="calculateChemistryAndColor()">
+            <option value="none">Không dùng chất chỉ thị</option>
+            <option value="litmus">Giấy quỳ tím hóa dung dịch</option>
+            <option value="phenolphthalein">Dung dịch Phenolphthalein</option>
+        </select>
+    </div>
+    
+    <button class="btn-add" onclick="injectChemicalToBeaker()">Rót vào cốc nghiệm</button>
+    <button class="btn-reset" onclick="clearLabSystem()">Xóa làm lại thí nghiệm</button>
+
+    <div id="phenomenon-box">
+        <span class="group-label" style="border-left-color: #ffb300; color: #ffb300;">Hiện tượng vĩ mô</span>
+        <p id="phenomenon">Cốc thủy tinh chưa chứa chất tan. Hãy chọn một chất và nhấn nút để bắt đầu.</p>
+    </div>
+</div>
+
+<script>
+    /** ==========================================
+     * CƠ SỞ DỮ LIỆU ĐỘNG VÀ THÔNG SỐ TOÁN HỌC HÓA HỌC
+     * ========================================== */
+    const ChemicalDatabase = {
+        'HCl':     { name: 'Axit clohiđric', ions: ['H+', 'Cl-'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'H2SO4':   { name: 'Axit sunfuric', ions: ['H+', 'SO4(2-)'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'NaOH':    { name: 'Natri hiđroxit', ions: ['Na+', 'OH-'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'Ba(OH)2': { name: 'Bari hiđroxit', ions: ['Ba2+', 'OH-'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'Na2CO3':  { name: 'Natri cacbonat', ions: ['Na+', 'CO3(2-)'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'CuSO4':   { name: 'Đồng(II) sunfat', ions: ['Cu2+', 'SO4(2-)'], color: 'rgba(0, 140, 255, 0.25)', baseColor: [0,140,255,0.25] },
+        'AgNO3':   { name: 'Bạc nitrat', ions: ['Ag+', 'NO3-'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] },
+        'NaHCO3':  { name: 'Natri hiđrocacbonat', ions: ['Na+', 'HCO3-'], color: 'rgba(255, 255, 255, 0.08)', baseColor: [255,255,255,0.08] }
+    };
+
+    // Hệ thống quản lý toàn bộ thực thể trạng thái của Lab
+    let LabState = {
+        totalVolume: 0,
+        temperature: 25,
+        currentIndicator: 'none',
+        selectedChemKey: null,
+        compoundsInBeaker: [],
+        
+        // Theo dõi số lượng hạt/mol ion tự do trong hệ thống cốc
+        ionPool: {
+            'H+': 0, 'OH-': 0, 'Na+': 0, 'Cl-': 0, 'Ba2+': 0, 
+            'SO4(2-)': 0, 'Cu2+': 0, 'CO3(2-)': 0, 'Ag+': 0, 'NO3-': 0, 'HCO3-': 0
+        },
+        
+        // Lưu trữ mảng thực thể đồ họa động
+        visualParticles: [],
+        gasBubbles: [],
+        precipitates: [],
+        sedimentFloorHeight: 345, // Tọa độ đáy cốc ban đầu áp dụng lắng kết tủa
+        targetTemperature: 25
+    };
+
+    // Khởi tạo các ngữ cảnh Canvas vẽ đồ họa
+    const canvasLiquid = document.getElementById('canvas-liquid');
+    const ctxLiquid = canvasLiquid.getContext('2d');
+    const canvasParticles = document.getElementById('canvas-particles');
+    const ctxParticles = canvasParticles.getContext('2d');
+    const canvasMicro = document.getElementById('canvas-micro');
+    const ctxMicro = canvasMicro.getContext('2d');
+    let phRealtimeChart;
+
+    /** ==========================================
+     * HỆ THỐNG VẬT LÝ HẠT & CHUYỂN ĐỘNG ION VI MÔ
+     * ========================================== */
+    class IonParticle {
+        constructor(ionType, isMicroscopeView = false) {
+            this.type = ionType;
+            this.isMicro = isMicroscopeView;
+            this.radius = isMicroscopeView ? 4.5 : 3;
+            this.initializePosition();
+        }
+
+        initializePosition() {
+            if (this.isMicro) {
+                this.x = Math.random() * 190;
+                this.y = Math.random() * 190;
             } else {
-                nameInput.style.borderColor = '#cbd5e1';
-                emailInput.style.borderColor = '#cbd5e1';
-                if (isValid) {
-                    // Mô phỏng gửi thành công
-                    feedback.innerHTML = '<span style="color:#2e7d32;">✓ Cảm ơn ' + nameInput.value + '! Chúng tôi sẽ liên hệ sớm nhất.</span>';
-                    form.reset();
-                    // Tự động xóa thông báo sau 4 giây
-                    setTimeout(() => {
-                        feedback.innerHTML = '';
-                    }, 5000);
+                // Hạt xuất hiện ngẫu nhiên trong vùng phân bố của mực chất lỏng hiện tại
+                this.x = 65 + Math.random() * 170;
+                const liquidHeight = (LabState.totalVolume / 250) * 240;
+                const surfaceY = 345 - liquidHeight;
+                this.y = surfaceY + Math.random() * liquidHeight;
+            }
+            // Tạo vận tốc ngẫu nhiên mô phỏng chuyển động nhiệt Brown
+            this.vx = (Math.random() - 0.5) * 1.6;
+            this.vy = (Math.random() - 0.5) * 1.6;
+        }
+
+        updateAndBounce() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if (this.isMicro) {
+                // Kiểm tra va chạm với thành tròn kính hiển vi vi mô
+                const dx = this.x - 95;
+                const dy = this.y - 95;
+                const distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance > 95 - this.radius) {
+                    const nx = dx / distance;
+                    const ny = dy / distance;
+                    const dot = this.vx * nx + this.vy * ny;
+                    this.vx -= 2 * dot * nx;
+                    this.vy -= 2 * dot * ny;
+                    this.x = 95 + nx * (95 - this.radius);
+                    this.y = 95 + ny * (95 - this.radius);
+                }
+            } else {
+                // Kiểm tra va chạm hộp giới hạn tương ứng với thành và mực nước cốc nghiệm
+                if (this.x < 55 || this.x > 245) this.vx *= -1;
+                const liquidHeight = (LabState.totalVolume / 250) * 240;
+                const surfaceY = 345 - liquidHeight;
+                if (this.y < surfaceY + 5 || this.y > LabState.sedimentFloorHeight) this.vy *= -1;
+                
+                // Giữ hạt không vượt biên
+                if (this.x < 55) this.x = 55; if (this.x > 245) this.x = 245;
+                if (this.y < surfaceY + 5) this.y = surfaceY + 5;
+                if (this.y > LabState.sedimentFloorHeight) this.y = LabState.sedimentFloorHeight;
+            }
+        }
+
+        draw(ctx) {
+            ctx.beginPath();
+            // Đổi màu sắc trực quan phân biệt Ion Dương và Ion Âm
+            if (this.type.includes('+')) {
+                ctx.fillStyle = '#ff4d4d'; // Đỏ neon cho Cation
+            } else {
+                ctx.fillStyle = '#3399ff'; // Xanh dương cho Anion
+            }
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nếu ở ô vi mô, kết xuất thêm nhãn chữ công thức Ion hóa học
+            if (this.isMicro) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 9px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.type, this.x, this.y - 6);
+            }
+        }
+    }
+
+    /** ==========================================
+     * LOGIC XỬ LÝ PHẢN ỨNG HÓA HỌC CHÍNH XÁC
+     * ========================================== */
+    function selectChemical(key, element) {
+        LabState.selectedChemKey = key;
+        document.getElementById('selected-display').innerText = `${ChemicalDatabase[key].name} (${key})`;
+        
+        document.querySelectorAll('.chem-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    function injectChemicalToBeaker() {
+        if (!LabState.selectedChemKey) {
+            alert("Vui lòng chọn một chất hóa học từ danh sách bên trái trước!");
+            return;
+        }
+
+        const inputVol = parseInt(document.getElementById('vol-slider').value);
+        if (LabState.totalVolume + inputVol > 270) {
+            alert("Cốc thủy tinh đã đầy tối đa dung tích (250mL)! Hãy bấm làm mới để tiến hành thí nghiệm khác.");
+            return;
+        }
+
+        const activeKey = LabState.selectedChemKey;
+        LabState.totalVolume += inputVol;
+        LabState.compoundsInBeaker.push(activeKey);
+
+        // Nạp số lượng đương lượng mol ion tự do tương ứng (1M tỉ lệ thuận với ml)
+        const dbEntry = ChemicalDatabase[activeKey];
+        dbEntry.ions.forEach(ion => {
+            let multiplier = 1;
+            // Xử lý hệ số tỉ lượng điện tích phân ly
+            if (activeKey === 'H2SO4' && ion === 'H+') multiplier = 2;
+            if (activeKey === 'Ba(OH)2' && ion === 'OH-') multiplier = 2;
+            if (activeKey === 'Na2CO3' && ion === 'Na+') multiplier = 2;
+            
+            LabState.ionPool[ion] += inputVol * multiplier;
+            
+            // Khởi tạo các thực thể hạt chuyển động trực quan tương ứng lượng chất nạp
+            for (let i = 0; i < Math.min(inputVol, 12); i++) {
+                LabState.visualParticles.push(new IonParticle(ion, false));
+            }
+            for (let i = 0; i < 3; i++) {
+                LabState.visualParticles.push(new IonParticle(ion, true));
+            }
+        });
+
+        // Kích hoạt bộ máy phân tích và giải quyết chuỗi phản ứng liên tục
+        evaluateChemicalReactions();
+    }
+
+    function evaluateChemicalReactions() {
+        let reactionHappened = false;
+        let eqText = "Chưa có phản ứng xảy ra";
+        let phenomenonText = "Dung dịch hòa tan đồng nhất trong suốt.";
+        
+        const pool = LabState.ionPool;
+        document.getElementById('equation-display').classList.remove('reacting');
+
+        // [PHẢN ỨNG 1]: H+ + OH- -> H2O (Phản ứng trung hòa tỏa nhiệt)
+        if (pool['H+'] > 0 && pool['OH-'] > 0) {
+            const reactionAmount = Math.min(pool['H+'], pool['OH-']);
+            pool['H+'] -= reactionAmount;
+            pool['OH-'] -= reactionAmount;
+            
+            // Tính toán hiệu ứng tỏa nhiệt đặc trưng
+            LabState.targetTemperature += (reactionAmount / 15);
+            if(LabState.targetTemperature > 65) LabState.targetTemperature = 65;
+            
+            // Xác định xem đây là cặp chất cụ thể nào để viết PT phân tử chuẩn xác theo yêu cầu
+            if(LabState.compoundsInBeaker.includes('H2SO4') && LabState.compoundsInBeaker.includes('NaOH')) {
+                eqText = "H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O";
+                phenomenonText = "Phản ứng trung hòa diễn ra mạnh mẽ, tỏa nhiều nhiệt (Nhiệt độ tăng cao). Dung dịch không có hiện tượng màu lạ.";
+            } else if(LabState.compoundsInBeaker.includes('HCl') && LabState.compoundsInBeaker.includes('NaOH')) {
+                eqText = "HCl + NaOH → NaCl + H₂O";
+                phenomenonText = "Phản ứng trung hòa tỏa nhiệt nhẹ, không sinh kết tủa hay khí.";
+            } else {
+                eqText = "H⁺ + OH⁻ → H₂O";
+                phenomenonText = "Phản ứng trung hòa tỏa nhiệt.";
+            }
+            
+            // Loại bỏ bớt các hạt ion H+ và OH- đã trung hòa khỏi màn hình
+            removeNeutralizedIons(['H+', 'OH-'], reactionAmount);
+            reactionHappened = true;
+        }
+
+        // [PHẢN ỨNG 2]: H2SO4 + Ba(OH)2 -> BaSO4↓ + 2H2O (Tạo kết tủa trắng)
+        if (pool['Ba2+'] > 0 && pool['SO4(2-)'] > 0) {
+            const precipitateAmount = Math.min(pool['Ba2+'], pool['SO4(2-)']);
+            pool['Ba2+'] -= precipitateAmount;
+            pool['SO4(2-)'] -= precipitateAmount;
+            
+            eqText = "H₂SO₄ + Ba(OH)2 → BaSO₄↓ + 2H₂O";
+            phenomenonText = "Xuất hiện kết tủa trắng Bari Sunfat (BaSO₄) mịn màng, hình thành từ bề mặt hòa trộn và lắng đọng xuống đáy.";
+            
+            generatePrecipitateGraphics('#ffffff', precipitateAmount * 1.5);
+            removeNeutralizedIons(['Ba2+', 'SO4(2-)'], precipitateAmount);
+            reactionHappened = true;
+        }
+
+        // [PHẢN ỨNG 3]: Ba(OH)2 + CuSO4 -> BaSO4↓ + Cu(OH)2↓ (KẾT TỦA KÉP: XANH DƯƠNG VÀ TRẮNG)
+        if (LabState.compoundsInBeaker.includes('Ba(OH)2') && LabState.compoundsInBeaker.includes('CuSO4') && (pool['Ba2+'] > 0 || pool['Cu2+'] > 0)) {
+            // Trường hợp đặc biệt xử lý theo từng cặp ion để tạo 2 màu tủa đồng thời
+            let amtBaSO4 = Math.min(pool['Ba2+'], pool['SO4(2-)']);
+            let amtCuOH2 = Math.min(pool['Cu2+'], pool['OH-'] / 2);
+
+            if (amtBaSO4 > 0 || amtCuOH2 > 0) {
+                pool['Ba2+'] -= amtBaSO4;
+                pool['SO4(2-)'] -= amtBaSO4;
+                pool['Cu2-'] = Math.max(0, pool['Cu2+'] - amtCuOH2);
+                pool['OH-'] = Math.max(0, pool['OH-'] - amtCuOH2 * 2);
+
+                eqText = "Ba(OH)₂ + CuSO₄ → BaSO₄↓ + Cu(OH)₂↓";
+                phenomenonText = "Phản ứng tạo ra hỗn hợp kết tủa kép: Bari sunfat màu trắng (BaSO₄) kết hợp đồng thời với Đồng(II) hiđroxit màu xanh dương (Cu(OH)₂) lắng đọng rực rỡ.";
+                
+                if(amtBaSO4 > 0) generatePrecipitateGraphics('#ffffff', amtBaSO4 * 1.5);
+                if(amtCuOH2 > 0) generatePrecipitateGraphics('#00b0ff', amtCuOH2 * 2.5);
+                
+                removeNeutralizedIons(['Ba2+', 'SO4(2-)', 'Cu2+', 'OH-'], Math.max(amtBaSO4, amtCuOH2));
+                reactionHappened = true;
+            }
+        }
+
+        // [PHẢN ỨNG 4]: NaOH + CuSO4 -> Cu(OH)2↓ + Na2SO4 (Kết tủa xanh dương)
+        if (pool['Cu2+'] > 0 && pool['OH-'] > 0) {
+            const precipitateAmount = Math.min(pool['Cu2+'], pool['OH-'] / 2);
+            if(precipitateAmount > 0) {
+                pool['Cu2+'] -= precipitateAmount;
+                pool['OH-'] -= precipitateAmount * 2;
+                
+                eqText = "2NaOH + CuSO₄ → Cu(OH)₂↓ + Na₂SO₄";
+                phenomenonText = "Xuất hiện kết tủa keo dạng đám mây màu xanh dương đặc trưng của Đồng(II) hiđroxit [Cu(OH)₂] lắng dần xuống đáy.";
+                
+                generatePrecipitateGraphics('#00b0ff', precipitateAmount * 3);
+                removeNeutralizedIons(['Cu2+', 'OH-'], precipitateAmount);
+                reactionHappened = true;
+            }
+        }
+
+        // [PHẢN ỨNG 5]: Axit (HCl/H2SO4) + Na2CO3 -> Sủi bọt khí CO2
+        if (pool['H+'] > 0 && pool['CO3(2-)'] > 0) {
+            const gasAmount = Math.min(pool['H+'] / 2, pool['CO3(2-)']);
+            if (gasAmount > 0) {
+                pool['H+'] -= gasAmount * 2;
+                pool['CO3(2-)'] -= gasAmount;
+                
+                if (LabState.compoundsInBeaker.includes('H2SO4')) {
+                    eqText = "H₂SO₄ + Na₂CO₃ → Na₂SO₄ + CO₂↑ + H₂O";
+                } else {
+                    eqText = "2HCl + Na₂CO₃ → 2NaCl + CO₂↑ + H₂O";
+                }
+                phenomenonText = "Hiện tượng sủi bọt khí mãnh liệt diễn ra ngay lập tức. Khí Carbon dioxide (CO₂) liên tục thoát ra từ lòng dung dịch.";
+                
+                generateGasBubblesGraphics(gasAmount * 2);
+                removeNeutralizedIons(['H+', 'CO3(2-)'], gasAmount);
+                reactionHappened = true;
+            }
+        }
+
+        // [PHẢN ỨNG 6]: HCl + NaHCO3 -> Sủi bọt khí CO2
+        if (pool['H+'] > 0 && pool['HCO3-'] > 0) {
+            const gasAmount = Math.min(pool['H+'], pool['HCO3-']);
+            pool['H+'] -= gasAmount;
+            pool['HCO3-'] -= gasAmount;
+            
+            eqText = "HCl + NaHCO₃ → NaCl + CO₂↑ + H₂O";
+            phenomenonText = "Phản ứng sủi bọt khí mạnh mẽ từ muối axit natri hiđrocacbonat tạo khí CO₂ thoát nhanh lên bề mặt.";
+            
+            generateGasBubblesGraphics(gasAmount * 2);
+            removeNeutralizedIons(['H+', 'HCO3-'], gasAmount);
+            reactionHappened = true;
+        }
+
+        // [PHẢN ỨNG 7]: HCl + AgNO3 -> Kết tủa trắng AgCl
+        if (pool['Ag+'] > 0 && pool['Cl-'] > 0) {
+            const precipitateAmount = Math.min(pool['Ag+'], pool['Cl-']);
+            pool['Ag+'] -= precipitateAmount;
+            pool['Cl-'] -= precipitateAmount;
+            
+            eqText = "HCl + AgNO₃ → AgCl↓ + HNO₃";
+            phenomenonText = "Phản ứng tạo thành kết tủa trắng vón cục của Bạc clorua (AgCl), kết tủa không tan xuất hiện ngay lập tức và chìm dần.";
+            
+            generatePrecipitateGraphics('#f5f5f5', precipitateAmount * 2);
+            removeNeutralizedIons(['Ag+', 'Cl-'], precipitateAmount);
+            reactionHappened = true;
+        }
+
+        // Cập nhật lên màn hình hiển thị chính
+        if (reactionHappened) {
+            document.getElementById('equation-display').innerText = eqText;
+            document.getElementById('equation-display').classList.add('reacting');
+            document.getElementById('phenomenon').innerText = phenomenonText;
+        }
+
+        calculateChemistryAndColor();
+    }
+
+    // Tiêu hủy bớt các ion tương ứng khi chúng đã phản ứng để cân bằng mật độ vi mô
+    function removeNeutralizedIons(labels, count) {
+        let targetedRemoved = 0;
+        for (let i = LabState.visualParticles.length - 1; i >= 0; i--) {
+            if (labels.includes(LabState.visualParticles[i].type)) {
+                LabState.visualParticles.splice(i, 1);
+                targetedRemoved++;
+                if (targetedRemoved >= count * 1.5) break;
+            }
+        }
+    }
+
+    /** ==========================================
+     * HỆ THỐNG PHÁT SINH ĐỒ HỌA HẠT (VĨ MÔ)
+     * ========================================== */
+    function generateGasBubblesGraphics(intensity) {
+        const amount = Math.min(intensity * 4, 80);
+        for (let i = 0; i < amount; i++) {
+            LabState.gasBubbles.push({
+                x: 60 + Math.random() * 180,
+                y: 120 + Math.random() * 210, // Xuất hiện rải rác từ lòng nước
+                radius: Math.random() * 3.5 + 1,
+                velocityUp: Math.random() * 2.5 + 1.2,
+                wobbleSpeed: Math.random() * 0.08
+            });
+        }
+    }
+
+    function generatePrecipitateGraphics(hexColor, intensity) {
+        const amount = Math.min(intensity * 5, 120);
+        const currentLiquidHeight = (LabState.totalVolume / 250) * 240;
+        const topSurfaceY = 345 - currentLiquidHeight;
+
+        for (let i = 0; i < amount; i++) {
+            // Yêu cầu quan trọng: Kết tủa hình thành ngay dưới bề mặt chất lỏng (vùng tiếp xúc dung dịch mới rót)
+            LabState.precipitates.push({
+                x: 60 + Math.random() * 180,
+                y: topSurfaceY + 5 + Math.random() * 15, // Tạo đỉnh sát mặt nước
+                color: hexColor,
+                fallSpeed: Math.random() * 1.2 + 0.6,
+                // Điểm dừng tích tụ nằm ở tầng sàn trầm tích di động
+                targetFloorY: LabState.sedimentFloorHeight - (Math.random() * 4)
+            });
+        }
+    }
+
+    /** ==========================================
+     * TÍNH TOÁN HOÁ LÝ ĐỘ PH VÀ ĐỔI MÀU CHẤT CHỈ THỊ
+     * ========================================== */
+    function calculateChemistryAndColor() {
+        const pool = LabState.ionPool;
+        let calculatedPH = 7.0;
+
+        // Định luật tác dụng khối lượng tính pH dựa trên chênh lệch nồng độ H+ và OH-
+        const balanceH = pool['H+'] - pool['OH-'];
+        const scalingFactor = (LabState.totalVolume || 1) * 8; // Mô hình hóa chuẩn hóa độ pH trực quan
+
+        if (balanceH > 0) {
+            calculatedPH = 7.0 - Math.log10(1 + (balanceH / scalingFactor) * 10);
+            if (calculatedPH < 0.5) calculatedPH = 0.5;
+        } else if (balanceH < 0) {
+            calculatedPH = 7.0 + Math.log10(1 + (Math.abs(balanceH) / scalingFactor) * 10);
+            if (calculatedPH > 13.5) calculatedPH = 13.5;
+        }
+
+        // Nếu có muối axit hoặc muối gốc đồng thì dung dịch thay đổi nhẹ pH môi trường lý thuyết
+        if (pool['Cu2+'] > 0 && calculatedPH === 7.0) calculatedPH = 5.8; 
+
+        document.getElementById('ph-val').innerText = calculatedPH.toFixed(1);
+        document.getElementById('vol-val').innerText = `${LabState.totalVolume} mL`;
+
+        // Tính toán pha trộn màu dung dịch theo chất chỉ thị màu
+        const indicator = document.getElementById('indicator-select').value;
+        let baseR = 255, baseG = 255, baseB = 255, baseAlpha = 0.08;
+
+        // Nếu có CuSO4 và không bị trung hòa, dung dịch sẽ mang sắc xanh lam trong suốt đặc trưng
+        if (pool['Cu2+'] > 0) {
+            baseR = 0; baseG = 130; baseB = 255; baseAlpha = 0.22;
+        }
+
+        if (indicator === 'litmus') { // Chỉ thị màu giấy Quỳ tím
+            if (calculatedPH < 5.5) { // Axit -> Hóa Đỏ
+                baseR = 255; baseG = 50; baseB = 50; baseAlpha = 0.35;
+            } else if (calculatedPH > 8.5) { // Bazơ -> Hóa Xanh
+                baseR = 50; baseG = 50; baseB = 255; baseAlpha = 0.35;
+            } else { // Trung tính -> Tím
+                baseR = 155; baseG = 50; baseB = 200; baseAlpha = 0.3;
+            }
+        } else if (indicator === 'pp') { // Chỉ thị màu Phenolphthalein
+            if (calculatedPH > 8.3) { // Môi trường kiềm -> Hồng cánh sen sặc sỡ
+                baseR = 255; baseG = 0; baseB = 128; baseAlpha = 0.45;
+            }
+        }
+
+        renderLiquidInBeaker(baseR, baseG, baseB, baseAlpha);
+        appendChartData(calculatedPH);
+    }
+
+    function renderLiquidInBeaker(r, g, b, alpha) {
+        ctxLiquid.clearRect(0, 0, 300, 380);
+        if (LabState.totalVolume <= 0) return;
+
+        // Chiều cao chất lỏng tỷ lệ thuận thể tích dung dịch thực tế
+        const liquidHeight = (LabState.totalVolume / 250) * 240;
+        const bottomY = 345;
+        const topY = bottomY - liquidHeight;
+
+        // Đổ màu nền dung dịch chính
+        ctxLiquid.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctxLiquid.beginPath();
+        ctxLiquid.moveTo(52, bottomY);
+        ctxLiquid.lineTo(52, topY);
+        // Tạo mặt khum chất lỏng (meniscus) chân thực theo cấu trúc vật lý
+        ctxLiquid.quadraticCurveTo(150, topY + 12, 248, topY);
+        ctxLiquid.lineTo(248, bottomY);
+        ctxLiquid.quadraticCurveTo(150, bottomY + 10, 52, bottomY);
+        ctxLiquid.fill();
+
+        // Tạo đường bóng sáng phản chiếu bề mặt cong chất lỏng
+        ctxLiquid.strokeStyle = "rgba(255, 255, 255, 0.45)";
+        ctxLiquid.lineWidth = 2.5;
+        ctxLiquid.stroke();
+    }
+
+    /** ==========================================
+     * HÀM LOOP HOẠT HỌA REAL-TIME ANIMATION KINETICS
+     * ========================================== */
+    function animateLabEngine() {
+        // Xóa sạch canvas hạt trước khi vẽ khung hình tiếp theo
+        ctxParticles.clearRect(0, 0, 300, 380);
+        ctxMicro.clearRect(0, 0, 190, 190);
+
+        // 1. Cập nhật nhiệt độ dịu dần theo thời gian (Tỏa nhiệt rồi nguội dần)
+        if (LabState.temperature < LabState.targetTemperature) {
+            LabState.temperature += 0.15;
+        } else if (LabState.temperature > 25) {
+            LabState.temperature -= 0.005; 
+        }
+        document.getElementById('temp-val').innerText = `${Math.round(LabState.temperature)}°C`;
+
+        // 2. Chạy vòng lặp và kết xuất các hạt Ion tự do chuyển động Brown
+        LabState.visualParticles.forEach(p => {
+            p.updateAndBounce();
+            p.draw(p.isMicro ? ctxMicro : ctxParticles);
+        });
+
+        // 3. Xử lý hoạt cảnh vật lý bọt khí (Sủi tăm bay ngược lên không trung)
+        const currentLiquidHeight = (LabState.totalVolume / 250) * 240;
+        const surfaceLevelY = 345 - currentLiquidHeight;
+
+        for (let i = LabState.gasBubbles.length - 1; i >= 0; i--) {
+            let bubble = LabState.gasBubbles[i];
+            bubble.y -= bubble.velocityUp;
+            bubble.x += Math.sin(bubble.y * bubble.wobbleSpeed) * 0.6; // Tạo độ uốn lượn zigzag khi bay lên
+
+            ctxParticles.beginPath();
+            ctxParticles.fillStyle = "rgba(255, 255, 255, 0.55)";
+            ctxParticles.strokeStyle = "rgba(255, 255, 255, 0.8)";
+            ctxParticles.lineWidth = 0.5;
+            ctxParticles.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+            ctxParticles.fill();
+            ctxParticles.stroke();
+
+            // Khi bong bóng vỡ tung khi vượt quá mặt khum chất lỏng
+            if (bubble.y < surfaceLevelY + 8) {
+                LabState.gasBubbles.splice(i, 1);
+            }
+        }
+
+        // 4. Xử lý hoạt cảnh vật lý kết tủa lắng xuống đáy (Sedimentation Floor Physics)
+        let newSedimentCount = 0;
+        LabState.precipitates.forEach(ppt => {
+            if (ppt.y < ppt.targetFloorY) {
+                ppt.y += ppt.fallSpeed; // Trọng lực kéo chìm xuống từ bề mặt
+            } else {
+                newSedimentCount++;
+            }
+
+            ctxParticles.beginPath();
+            ctxParticles.fillStyle = ppt.color;
+            // Tạo quầng sáng mờ quanh hạt tủa
+            ctxParticles.shadowColor = ppt.color;
+            ctxParticles.shadowBlur = ppt.y >= ppt.targetFloorY ? 0 : 2;
+            ctxParticles.arc(ppt.x, ppt.y, 3.2, 0, Math.PI * 2);
+            ctxParticles.fill();
+            ctxParticles.shadowBlur = 0; // Trả lại cấu trúc shadow mặc định
+        });
+
+        // Động học tích tụ đáy: Lớp cặn lắng dày lên sẽ đẩy sàn tích tụ đáy cao lên dần dần một cách trực quan
+        if (newSedimentCount > 15 && LabState.sedimentFloorHeight > 310) {
+            LabState.sedimentFloorHeight -= 0.12;
+        }
+
+        // Đệ quy yêu cầu khung hình kế tiếp từ trình duyệt bảo đảm mượt mà 60fps
+        requestAnimationFrame(animateLabEngine);
+    }
+
+    /** ==========================================
+     * KHỞI TẠO BIỂU ĐỒ THEO DÕI ĐỘ PH REAL-TIME CHART
+     * ========================================== */
+    function initializeChartEngine() {
+        const ctx = document.getElementById('phChart').getContext('2d');
+        phRealtimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Đường cong biến thiên pH',
+                    data: [],
+                    borderColor: '#45f3ff',
+                    borderWidth: 3,
+                    backgroundColor: 'rgba(69, 243, 255, 0.1)',
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 14,
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#8da2bb', font: { size: 9 } }
+                    },
+                    x: { display: false }
+                },
+                plugins: {
+                    legend: { display: false }
                 }
             }
         });
+    }
+
+    function appendChartData(currentPH) {
+        phRealtimeChart.data.labels.push(`${LabState.totalVolume}mL`);
+        phRealtimeChart.data.datasets[0].data.push(currentPH);
         
-        // Thêm hiệu ứng focus cho các input
-        const inputs = document.querySelectorAll('input, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                input.style.borderColor = '#2563eb';
-            });
-            input.addEventListener('blur', () => {
-                if (!input.value.trim() || (input.type === 'email' && !input.value.includes('@'))) {
-                    // không làm gì quá mức
-                } else {
-                    input.style.borderColor = '#cbd5e1';
-                }
-            });
-        });
-    })();
+        // Giới hạn số lượng điểm hiển thị để biểu đồ chạy cuộn mượt
+        if (phRealtimeChart.data.labels.length > 40) {
+            phRealtimeChart.data.labels.shift();
+            phRealtimeChart.data.datasets[0].data.shift();
+        }
+        phRealtimeChart.update('none'); // Cập nhật tĩnh siêu nhanh không giật lag
+    }
+
+    /** XÓA TOÀN BỘ HỆ THỐNG LÀM MỚI PHÒNG THÍ NGHIỆM */
+    function clearLabSystem() {
+        // Khởi động lại toàn bộ các thông số ban đầu
+        LabState = {
+            totalVolume: 0, temperature: 25, currentIndicator: 'none', selectedChemKey: null, compoundsInBeaker: [],
+            ionPool: { 'H+': 0, 'OH-': 0, 'Na+': 0, 'Cl-': 0, 'Ba2+': 0, 'SO4(2-)': 0, 'Cu2+': 0, 'CO3(2-)': 0, 'Ag+': 0, 'NO3-': 0, 'HCO3-': 0 },
+            visualParticles: [], gasBubbles: [], precipitates: [], sedimentFloorHeight: 345, targetTemperature: 25
+        };
+
+        document.getElementById('ph-val').innerText = "7.0";
+        document.getElementById('vol-val').innerText = "0 mL";
+        document.getElementById('temp-val').innerText = "25°C";
+        document.getElementById('selected-display').innerText = "CHƯA CHỌN CHẤT";
+        document.getElementById('equation-display').innerText = "Cốc nghiệm hiện tại đang trống";
+        document.getElementById('phenomenon').innerText = "Cốc thủy tinh chưa chứa chất tan. Hãy chọn một chất và nhấn nút để bắt đầu.";
+        document.getElementById('indicator-select').value = "none";
+        
+        document.querySelectorAll('.chem-item').forEach(item => item.classList.remove('active'));
+        
+        ctxLiquid.clearRect(0, 0, 300, 380);
+        ctxParticles.clearRect(0, 0, 300, 380);
+        ctxMicro.clearRect(0, 0, 190, 190);
+
+        phRealtimeChart.data.labels = [];
+        phRealtimeChart.data.datasets[0].data = [];
+        phRealtimeChart.update();
+    }
+
+    // Lệnh khởi chạy đầu tiên khi tải trang web hoàn tất
+    window.onload = function() {
+        initializeChartEngine();
+        animateLabEngine();
+    };
 </script>
 </body>
 </html>
