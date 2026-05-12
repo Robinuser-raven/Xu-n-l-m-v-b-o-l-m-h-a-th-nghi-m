@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thí Nghiệm Hóa Học Tương Tác - PhET Clone</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --bg: #f5f6fa;
+            --panel-bg: #ffffff;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); overflow: hidden; display: flex; height: 100vh; }
+
+        /* Sidebar bên trái: Danh sách hóa chất */
+        #sidebar-left { width: 250px; background: var(--panel-bg); border-right: 1px solid #ddd; padding: 15px; overflow-y: auto; z-index: 10; }
+        .group-box { margin-bottom: 20px; border: 1px solid #eee; border-radius: 8px; padding: 10px; }
+        .group-title { font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 2px solid var(--accent); }
+        .chem-item { 
+            padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; 
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
+        }
+        .chem-item:hover { background: #e3f2fd; transform: translateX(5px); }
+        .hint-light { display: none; color: #f1c40f; font-size: 1.2em; }
+
+        /* Khu vực chính ở giữa */
+        #main-lab { flex-grow: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #ffffff 0%, #dcdde1 100%); }
+        #flask-container { position: relative; width: 300px; height: 400px; }
+        #flask-svg { width: 100%; height: 100%; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
+        #liquid { transition: fill 1s, height 0.5s; }
+
+        /* Kính hiển vi vi mô */
+        #microscope { 
+            position: absolute; top: 20px; left: 20px; width: 180px; height: 180px; 
+            border-radius: 50%; border: 5px solid #333; background: #000; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        #micro-canvas { background: transparent; }
+
+        /* Sidebar bên phải: Điều khiển */
+        #sidebar-right { width: 300px; background: var(--panel-bg); border-left: 1px solid #ddd; padding: 15px; display: flex; flex-direction: column; }
+        .control-panel { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .slider { width: 100%; margin: 10px 0; }
+        .btn { 
+            padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; 
+            transition: 0.3s; width: 100%; margin-top: 10px;
+        }
+        .btn-add { background: #2ecc71; color: white; }
+        .btn-reset { background: #e74c3c; color: white; }
+
+        /* Đồ thị */
+        #graph-container { height: 150px; width: 100%; background: #eee; border-radius: 5px; margin-top: auto; }
+        
+        /* Tooltip an toàn */
+        .safety-tooltip { position: absolute; background: #333; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 12px; display: none; z-index: 100; pointer-events: none; }
+
+        /* Phương trình */
+        #equation-display {
+            position: absolute; bottom: 30px; background: rgba(255,255,255,0.8);
+            padding: 10px 20px; border-radius: 20px; font-style: italic; color: var(--primary);
+            font-size: 1.1em; border: 1px solid var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar-left">
+        <h2 style="font-size: 1.2em;">Hóa Chất</h2>
+        <div class="group-box" id="acid-group"><div class="group-title">Nhóm Acid (1M)</div></div>
+        <div class="group-box" id="base-group"><div class="group-title">Nhóm Base (1M)</div></div>
+        <div class="group-box" id="salt-n-group"><div class="group-title">Muối Trung Hòa</div></div>
+        <div class="group-box" id="salt-a-group"><div class="group-title">Muối Acid</div></div>
+    </div>
+
+    <div id="main-lab">
+        <div id="microscope">
+            <canvas id="micro-canvas" width="180" height="180"></canvas>
+        </div>
+
+        <div id="flask-container">
+            <svg id="flask-svg" viewBox="0 0 200 250">
+                <path id="liquid" d="M 60 100 L 140 100 L 170 230 Q 175 245 155 245 L 45 245 Q 25 245 30 230 Z" fill="#e1f5fe" opacity="0.7" />
+                <path d="M 70 20 L 130 20 L 130 60 L 180 230 Q 190 250 160 250 L 40 250 Q 10 250 20 230 L 70 60 Z" 
+                      fill="none" stroke="#2c3e50" stroke-width="3" />
+                <line x1="80" y1="200" x2="120" y2="200" stroke="#999" stroke-width="1" />
+                <text x="125" y="205" font-size="10" fill="#666">100ml</text>
+                <line x1="85" y1="150" x2="115" y2="150" stroke="#999" stroke-width="1" />
+                <text x="120" y="155" font-size="10" fill="#666">200ml</text>
+            </svg>
+        </div>
+
+        <div id="equation-display">Chọn hóa chất để bắt đầu thí nghiệm...</div>
+    </div>
+
+    <div id="sidebar-right">
+        <div class="control-panel">
+            <h3>Điều khiển</h3>
+            <label>Chất đang chọn: <b id="selected-name">Chưa chọn</b></label>
+            <br><br>
+            <label>Thể tích thêm (mL): <span id="vol-val">50</span></label>
+            <input type="range" class="slider" id="vol-slider" min="5" max="100" value="50">
+            
+            <label>Nhiệt độ (°C): <span id="temp-val">25</span></label>
+            <input type="range" class="slider" id="temp-slider" min="0" max="100" value="25">
+
+            <label>Chất chỉ thị:</label>
+            <select id="indicator-select" class="slider">
+                <option value="none">Không có</option>
+                <option value="quytim">Quỳ tím</option>
+                <option value="phenolphthalein">Phenolphthalein</option>
+            </select>
+
+            <button class="btn btn-add" id="btn-pour">Rót vào bình</button>
+            <button class="btn btn-reset" id="btn-reset">Làm mới</button>
+        </div>
+
+        <div class="control-panel">
+            <p>pH Hiện tại: <strong id="ph-display" style="color: #e67e22;">7.0</strong></p>
+            <p>Trạng thái: <span id="status-display">Sẵn sàng</span></p>
+        </div>
+
+        <div id="graph-container">
+            <canvas id="graph-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="safety-tooltip" id="safety-tip"></div>
+
+    <script>
+        /***********************************************************
+         * 1. CƠ SỞ DỮ LIỆU HÓA HỌC
+         ***********************************************************/
+        const chemicals = {
+            acids: [
+                { id: 'HCl', name: 'Hydrochloric Acid', formula: 'HCl', color: '#ffffff', pH: 0.1, danger: 'Ăn mòn mạnh, tránh tiếp xúc da.' },
+                { id: 'H2SO4', name: 'Sulfuric Acid', formula: 'H₂SO₄', color: '#ffffff', pH: 0.05, danger: 'Gây bỏng nặng, tỏa nhiệt mạnh.' },
+                { id: 'CH3COOH', name: 'Acetic Acid', formula: 'CH₃COOH', color: '#ffffff', pH: 2.4, danger: 'Mùi hắc, gây kích ứng mắt.' }
+            ],
+            bases: [
+                { id: 'NaOH', name: 'Sodium Hydroxide', formula: 'NaOH', color: '#ffffff', pH: 13.9, danger: 'Kiềm ăn mòn, gây trơn nhớt da.' },
+                { id: 'BaOH2', name: 'Barium Hydroxide', formula: 'Ba(OH)₂', color: '#ffffff', pH: 13.5, danger: 'Độc, ăn mòn.' }
+            ],
+            salts_n: [
+                { id: 'NaCl', name: 'Sodium Chloride', formula: 'NaCl', color: '#ffffff', pH: 7.0, danger: 'Muối ăn, an toàn.' },
+                { id: 'AgNO3', name: 'Silver Nitrate', formula: 'AgNO₃', color: '#ffffff', pH: 6.5, danger: 'Gây vết ố đen trên da.' },
+                { id: 'BaCl2', name: 'Barium Chloride', formula: 'BaCl₂', color: '#ffffff', pH: 7.0, danger: 'Độc nếu nuốt phải.' }
+            ],
+            salts_a: [
+                { id: 'NaHCO3', name: 'Sodium Bicarbonate', formula: 'NaHCO₃', color: '#ffffff', pH: 8.3, danger: 'Bột nở, khá an toàn.' },
+                { id: 'NaHSO4', name: 'Sodium Bisulfate', formula: 'NaHSO₄', color: '#ffffff', pH: 1.0, danger: 'Tính acid mạnh.' }
+            ]
+        };
+
+        const reactions = [
+            {
+                reactants: ['HCl', 'NaOH'],
+                equation: 'HCl + NaOH → NaCl + H₂O',
+                phenomenon: 'Phản ứng trung hòa, tỏa nhiệt.',
+                resultColor: 'transparent',
+                isNeutralization: true
+            },
+            {
+                reactants: ['HCl', 'NaHCO3'],
+                equation: 'HCl + NaHCO₃ → NaCl + CO₂↑ + H₂O',
+                phenomenon: 'Sủi bọt khí CO₂ mạnh.',
+                resultColor: 'transparent',
+                hasGas: true
+            },
+            {
+                reactants: ['BaCl2', 'H2SO4'],
+                equation: 'BaCl₂ + H₂SO₄ → BaSO₄↓ + 2HCl',
+                phenomenon: 'Kết tủa trắng xuất hiện ngay lập tức.',
+                resultColor: '#ffffff',
+                hasPrecipitate: true
+            },
+            {
+                reactants: ['AgNO3', 'HCl'],
+                equation: 'AgNO₃ + HCl → AgCl↓ + HNO₃',
+                phenomenon: 'Kết tủa trắng dạng keo.',
+                resultColor: '#f0f0f0',
+                hasPrecipitate: true
+            }
+        ];
+
+        /***********************************************************
+         * 2. QUẢN LÝ TRẠNG THÁI (STATE MANAGEMENT)
+         ***********************************************************/
+        let labState = {
+            inFlask: [], // Danh sách các chất đã rót vào
+            totalVolume: 0,
+            currentPH: 7.0,
+            temperature: 25,
+            selectedChem: null,
+            indicator: 'none',
+            particles: [],
+            isReacting: false
+        };
+
+        /***********************************************************
+         * 3. KHỞI TẠO GIAO DIỆN
+         ***********************************************************/
+        function init() {
+            renderChemList('acid-group', chemicals.acids);
+            renderChemList('base-group', chemicals.bases);
+            renderChemList('salt-n-group', chemicals.salts_n);
+            renderChemList('salt-a-group', chemicals.salts_a);
+
+            // Event Listeners
+            document.getElementById('vol-slider').oninput = e => document.getElementById('vol-val').innerText = e.target.value;
+            document.getElementById('temp-slider').oninput = e => document.getElementById('temp-val').innerText = e.target.value;
+            document.getElementById('btn-pour').onclick = pourChemical;
+            document.getElementById('btn-reset').onclick = resetLab;
+            document.getElementById('indicator-select').onchange = e => {
+                labState.indicator = e.target.value;
+                updateLiquidDisplay();
+            };
+
+            // Micro View Loop
+            requestAnimationFrame(updateMicroView);
+        }
+
+        function renderChemList(groupId, list) {
+            const container = document.getElementById(groupId);
+            list.forEach(chem => {
+                const div = document.createElement('div');
+                div.className = 'chem-item';
+                div.innerHTML = `<span>${chem.formula}</span> <span class="hint-light" id="hint-${chem.id}">💡</span>`;
+                div.onclick = () => selectChemical(chem);
+                div.onmouseover = (e) => showSafety(chem, e);
+                div.onmouseout = hideSafety;
+                container.appendChild(div);
+            });
+        }
+
+        function selectChemical(chem) {
+            labState.selectedChem = chem;
+            document.getElementById('selected-name').innerText = chem.name + " (" + chem.formula + ")";
+            
+            // Check gợi ý (Collision Theory & Compatibility)
+            document.querySelectorAll('.hint-light').forEach(h => h.style.display = 'none');
+            if (labState.inFlask.length > 0) {
+                const firstChem = labState.inFlask[0];
+                const canReact = reactions.some(r => 
+                    r.reactants.includes(firstChem.id) && r.reactants.includes(chem.id)
+                );
+                if (canReact) {
+                    // Logic mô phỏng: Nếu chất này phản ứng được với chất trong bình
+                    console.log("Phản ứng khả thi!");
+                }
+            }
+        }
+
+        function showSafety(chem, e) {
+            const tip = document.getElementById('safety-tip');
+            tip.style.display = 'block';
+            tip.innerText = "Cảnh báo: " + chem.danger;
+            tip.style.left = (e.pageX + 10) + "px";
+            tip.style.top = (e.pageY + 10) + "px";
+        }
+
+        function hideSafety() {
+            document.getElementById('safety-tip').style.display = 'none';
+        }
+
+        /***********************************************************
+         * 4. LOGIC HÓA HỌC & PHẢN ỨNG
+         ***********************************************************/
+        function pourChemical() {
+            if (!labState.selectedChem) return;
+
+            const vol = parseInt(document.getElementById('vol-slider').value);
+            const newChem = labState.selectedChem;
+            
+            // Cập nhật trạng thái bình
+            labState.totalVolume += vol;
+            if (labState.totalVolume > 250) labState.totalVolume = 250;
+
+            // Kiểm tra phản ứng
+            let reactionFound = null;
+            if (labState.inFlask.length > 0) {
+                reactionFound = reactions.find(r => 
+                    r.reactants.includes(labState.inFlask[0].id) && 
+                    r.reactants.includes(newChem.id)
+                );
+            }
+
+            labState.inFlask.push(newChem);
+            updatePH(newChem, vol, reactionFound);
+            
+            if (reactionFound) {
+                triggerReaction(reactionFound);
+            } else {
+                updateLiquidDisplay();
+                document.getElementById('status-display').innerText = "Đã thêm " + newChem.formula;
+            }
+
+            createParticles(newChem);
+        }
+
+        function updatePH(chem, vol, reaction) {
+            // Logic tính pH đơn giản hóa
+            if (reaction && reaction.isNeutralization) {
+                labState.currentPH = 7.0;
+            } else {
+                labState.currentPH = chem.pH; 
+            }
+            document.getElementById('ph-display').innerText = labState.currentPH.toFixed(1);
+        }
+
+        function triggerReaction(rxn) {
+            labState.isReacting = true;
+            document.getElementById('status-display').innerText = "Đang phản ứng...";
+            document.getElementById('equation-display').innerText = rxn.equation;
+
+            // Hiệu ứng đổi màu từ từ
+            let flaskLiquid = document.getElementById('liquid');
+            
+            if (rxn.hasGas) {
+                createGasBubbles();
+            }
+            
+            setTimeout(() => {
+                updateLiquidDisplay();
+                document.getElementById('status-display').innerText = rxn.phenomenon;
+                labState.isReacting = false;
+            }, 2000);
+        }
+
+        function updateLiquidDisplay() {
+            const liquid = document.getElementById('liquid');
+            const ph = labState.currentPH;
+            let color = "#e1f5fe"; // Mặc định
+
+            // Chỉ thị màu
+            if (labState.indicator === 'quytim') {
+                if (ph < 6) color = "#ff7675";
+                else if (ph > 8) color = "#74b9ff";
+                else color = "#a29bfe";
+            } else if (labState.indicator === 'phenolphthalein') {
+                color = (ph > 8.3) ? "#ff9ff3" : "#e1f5fe";
+            }
+
+            // Chiều cao chất lỏng
+            const heightLevel = 245 - (labState.totalVolume * 0.6); 
+            liquid.setAttribute('d', `M 60 ${heightLevel} L 140 ${heightLevel} L 170 230 Q 175 245 155 245 L 45 245 Q 25 245 30 230 Z`);
+            liquid.setAttribute('fill', color);
+        }
+
+        /***********************************************************
+         * 5. MÔ PHỎNG VI MÔ (PARTICLE SYSTEM)
+         ***********************************************************/
+        const canvas = document.getElementById('micro-canvas');
+        const ctx = canvas.getContext('2d');
+
+        class Particle {
+            constructor(type, color) {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.type = type;
+                this.color = color;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.radius = 4;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+                
+                ctx.fillStyle = "white";
+                ctx.font = "6px Arial";
+                ctx.fillText(this.type, this.x - 3, this.y + 2);
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+        }
+
+        function createParticles(chem) {
+            // Giả lập ion dựa trên công thức
+            let ion1 = "Ion+", ion2 = "Ion-";
+            if (chem.id === 'HCl') { ion1 = "H+"; ion2 = "Cl-"; }
+            if (chem.id === 'NaOH') { ion1 = "Na+"; ion2 = "OH-"; }
+
+            for (let i = 0; i < 10; i++) {
+                labState.particles.push(new Particle(ion1, "#e74c3c"));
+                labState.particles.push(new Particle(ion2, "#3498db"));
+            }
+        }
+
+        function createGasBubbles() {
+            // Hiệu ứng bọt khí trong micro-view
+            for (let i = 0; i < 15; i++) {
+                labState.particles.push(new Particle("CO2", "#eee"));
+            }
+        }
+
+        function updateMicroView() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ các ion
+            labState.particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+
+                // Logic va chạm đơn giản (Thuyết va chạm)
+                labState.particles.forEach((p2, index2) => {
+                    if (index !== index2) {
+                        const dx = p.x - p2.x;
+                        const dy = p.y - p2.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if (dist < 8 && p.type === "H+" && p2.type === "OH-") {
+                            // Phản ứng tạo nước
+                            p.type = "H2O"; p.color = "rgba(255,255,255,0.3)";
+                            p2.type = "H2O"; p2.color = "rgba(255,255,255,0.3)";
+                        }
+                    }
+                });
+            });
+
+            requestAnimationFrame(updateMicroView);
+        }
+
+        /***********************************************************
+         * 6. TIỆN ÍCH
+         ***********************************************************/
+        function resetLab() {
+            labState = {
+                inFlask: [],
+                totalVolume: 0,
+                currentPH: 7.0,
+                temperature: 25,
+                selectedChem: null,
+                indicator: 'none',
+                particles: [],
+                isReacting: false
+            };
+            document.getElementById('ph-display').innerText = "7.0";
+            document.getElementById('status-display').innerText = "Sẵn sàng";
+            document.getElementById('equation-display').innerText = "Chọn hóa chất để bắt đầu...";
+            document.getElementById('selected-name').innerText = "Chưa chọn";
+            document.getElementById('indicator-select').value = "none";
+            updateLiquidDisplay();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
